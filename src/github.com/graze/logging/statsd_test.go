@@ -7,6 +7,7 @@
 //
 // @license https://github.com/graze/golang-service-logging/blob/master/LICENSE
 // @link    https://github.com/graze/golang-service-logging
+
 package logging
 
 import (
