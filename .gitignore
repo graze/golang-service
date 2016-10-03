@@ -1,0 +1,36 @@
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.o
+*.a
+*.so
+
+# Folders
+_obj
+_test
+
+# Architecture specific extensions/prefixes
+*.[568vq]
+[568vq].out
+
+*.cgo1.go
+*.cgo2.c
+_cgo_defun.c
+_cgo_gotypes.go
+_cgo_export.*
+
+_testmain.go
+
+*.exe
+*.test
+*.prof
+
+# Exclude third party directories but track our stuff.
+# This inclusion/exclusion mechanism is a bit nasty
+bin/
+src/*
+!src/github.com/
+src/github.com/*
+!src/github.com/graze
+
+# Go binaries
+bin/
+pkg/
