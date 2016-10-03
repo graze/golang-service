@@ -19,7 +19,7 @@ import (
     "strings"
 )
 
-type statsdLHandler struct {
+type statsdHandler struct {
     statsd  *statsd.Client
     handler http.Handler
 }

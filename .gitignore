@@ -29,7 +29,6 @@ bin/
 src/*
 !src/github.com/
 src/github.com/*
-!src/github.com/graze
 
 # Go binaries
 bin/
