@@ -8,6 +8,22 @@
 
 - Output `response_time` and `count` statistics for each request to a statsd host
 
+## Usage
+
+```bash
+$ go get github.com/graze/golang-service/logging
+```
+
+```go
+func statsdHandler(h http.Handler) http.Handler {
+    client, err := stats.New("<ip>:<port>")
+    if err != nil {
+        panic(err)
+    }
+    return logging.StatsdHandler(client, h)
+}
+```
+
 ## Development
 
 ### Testing
