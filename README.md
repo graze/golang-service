@@ -2,7 +2,7 @@
 
 ### Healthd Logger
 
-- Support the healthd logs from AWS Elastic Beanstalk logs: (http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/health-enhanced-serverlogs.html)[AWS]
+- Support the healthd logs from AWS Elastic Beanstalk logs: [AWS](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/health-enhanced-serverlogs.html)
 
 ### Statsd Logger
 
@@ -20,5 +20,5 @@ $ make test
 
 # License
 
-- General code: (LICENSE)[MIT License]
+- General code: [MIT License](LICENSE)
 - some code: `Copyright (c) 2013 The Gorilla Handlers Authors. All rights reserved.`
