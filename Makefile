@@ -18,7 +18,7 @@ cli:
 	${DOCKER_CMD} sh
 
 test: ## Run all tests
-	${DOCKER_CMD} go test ./logging ./testing
+	${DOCKER_CMD} go test ./logging ./nettest
 
 doc: ## Build API documentation
 	${DOCKER_CMD} godoc github.com/graze/golang-service
