@@ -18,21 +18,24 @@ import (
     "fmt"
 )
 
-func TestCreateTCPServer(t *testing.T) {
-    cases := map[string]struct{msg, la string}{
-        "base": { "test", "localhost:"},
-        "specied port": { "test", "localhost:1201"},
-        "ip addresss": { "test", "127.0.0.1:"},
+func TestCreateServerWithTCPConnections(t *testing.T) {
+    cases := map[string]struct{net, msg, la string}{
+        "base": { "tcp", "test", "localhost:"},
+        "specied port": { "tcp", "test", "localhost:1201"},
+        "ip addresss": { "tcp", "test", "127.0.0.1:"},
+        "udp": {"udp", "test", "localhost:"},
     }
 
     for k, tc := range cases {
         done := make(chan string)
-        addr, sock, srvWg := CreateTCPServer(t, tc.la, done)
+        addr, sock, srvWg := CreateServer(t, tc.net, tc.la, done)
         defer srvWg.Wait()
         defer os.Remove(addr.String())
         defer sock.Close()
 
-        s, err := net.Dial("tcp", addr.String())
+        assert.Equal(t, tc.net, addr.Network())
+
+        s, err := net.Dial(tc.net, addr.String())
 		if err != nil {
 			t.Fatalf("%s: Dial() failed: %v", k, err)
 		}

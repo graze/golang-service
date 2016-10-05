@@ -15,26 +15,57 @@ import (
     "testing"
     "bufio"
     "io"
+    "io/ioutil"
     "sync"
     "time"
+    "os"
 )
 
-func CreateTCPServer(t *testing.T, la string, done chan<- string) (addr net.Addr, sock io.Closer, wg *sync.WaitGroup) {
+func CreateServer(t *testing.T, n, la string, done chan<- string) (addr net.Addr, sock io.Closer, wg *sync.WaitGroup) {
+    if n == "udp" || n == "tcp" {
+        la = "127.0.0.1:0"
+    } else {
+        // unix and unixgram: choose an address if none given
+        if la == "" {
+            // use ioutil.TempFile to get a name that is unique
+            f, err := ioutil.TempFile("", "servertest")
+            if err != nil {
+                t.Fatalf("TempFile: %v", err)
+            }
+            f.Close()
+            la = f.Name()
+        }
+        os.Remove(la)
+    }
+
     wg = new(sync.WaitGroup)
+    if n == "udp" || n == "unixgram" {
+        l, err := net.ListenPacket(n, la)
+        if err != nil {
+            t.Fatalf("CreateServer failed: %v", err)
+        }
+        addr = l.LocalAddr()
+        sock = l
+        wg.Add(1)
+        go func() {
+            defer wg.Done()
+            readPackets(l, done)
+        }()
+    } else {
+        l, err := net.Listen(n, la)
+        if err != nil {
+            t.Fatalf("CreateServer failed: %v", err)
+        }
 
-	l, e := net.Listen("tcp", la)
-	if e != nil {
-		t.Fatalf("CreateTCPServer failed: %v", e)
-	}
+        addr = l.Addr()
+        sock = l
+        wg.Add(1)
 
-    addr = l.Addr()
-	sock = l
-	wg.Add(1)
-
-	go func() {
-		defer wg.Done()
-		readStream(l, done, wg)
-	}()
+        go func() {
+            defer wg.Done()
+            readStream(l, done, wg)
+        }()
+    }
     return
 }
 
@@ -60,4 +91,29 @@ func readStream(l net.Listener, done chan<- string, wg *sync.WaitGroup) {
             c.Close()
         }(c)
     }
+}
+
+func readPackets(c net.PacketConn, done chan<- string) {
+    var buf [4096]byte
+    var rcvd string
+    ct := 0
+    for {
+        var n int
+        var err error
+
+        c.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
+        n, _, err = c.ReadFrom(buf[:])
+        rcvd += string(buf[:n])
+        if err != nil {
+            if oe, ok := err.(*net.OpError); ok {
+            if ct < 3 && oe.Temporary() {
+                ct++
+                continue
+                }
+            }
+        break
+        }
+    }
+    c.Close()
+    done <- rcvd
 }
