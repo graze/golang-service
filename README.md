@@ -1,5 +1,7 @@
 # Golang Service Helpers
 
+[![Build Status](https://travis-ci.org/graze/golang-service.svg?branch=master)](https://travis-ci.org/graze/golang-service)
+
 ## Logging
 
 Collection of Logging helpers for use by HTTP services
