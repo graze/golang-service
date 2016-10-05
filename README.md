@@ -26,12 +26,26 @@ func statsdHandler(h http.Handler) http.Handler {
 
 - Output `response_time` and `count` statistics for each request to a statsd host
 
-## Testing
+## NetTest
 
-Helpers for use when running tests
+Network helpers when for testing against networks
 
 ```bash
-$ go get github.com/graze/golang-service/testing
+$ go get github.com/graze/golang-service/nettest
+```
+
+```go
+done := make(chan string)
+addr, sock, srvWg := nettest.CreateServer(t, "tcp", "localhost:0", done)
+defer srvWg.Wait()
+defer os.Remove(addr.String())
+defer sock.Close()
+
+s, err := net.Dial("tcp", addr.String())
+fmt.Fprintf(s, msg + "\n")
+if msg = "\n" != <-done {
+    panic("message mismatch")
+}
 ```
 
 # Development
@@ -40,7 +54,7 @@ $ go get github.com/graze/golang-service/testing
 To run tests, run this on your host machine:
 
 ```
-$ make install
+$ make build
 $ make test
 ```
 

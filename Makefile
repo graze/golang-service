@@ -11,6 +11,9 @@ LDFLAGS=-ldflags "-X github.com/graze/golang-service/version.version=${VERSION}"
 build:
 	docker-compose build
 
+rebuild:
+	docker-compose build --no-cache
+
 cli:
 	${DOCKER_CMD} sh
 
