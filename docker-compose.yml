@@ -1,7 +1,7 @@
 version: '2'
 services:
-    logging:
+    golang:
         build: .
         volumes:
             - .:/go
-        working_dir: "/go/logging"
+        working_dir: "/go"

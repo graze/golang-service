@@ -1,4 +1,4 @@
-// This file is part of graze/golang-service-logging
+// This file is part of graze/golang-service
 //
 // Copyright (c) 2016 Nature Delivered Ltd. <https://www.graze.com>
 //
@@ -7,8 +7,8 @@
 //
 // @license https://github.com/graze/golang-service-logging/blob/master/LICENSE
 // @link    https://github.com/graze/golang-service-logging
-
 package logging
+
 
 import (
     "github.com/DataDog/datadog-go/statsd"

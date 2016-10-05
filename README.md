@@ -1,14 +1,8 @@
-# Http Service Logging Helpers
+# Golang Service Helpers
 
-### Healthd Logger
+## Logging
 
-- Support the healthd logs from AWS Elastic Beanstalk logs: [AWS](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/health-enhanced-serverlogs.html)
-
-### Statsd Logger
-
-- Output `response_time` and `count` statistics for each request to a statsd host
-
-## Usage
+Collection of Logging helpers for use by HTTP services
 
 ```bash
 $ go get github.com/graze/golang-service/logging
@@ -24,9 +18,25 @@ func statsdHandler(h http.Handler) http.Handler {
 }
 ```
 
-## Development
+### Healthd Logger
 
-### Testing
+- Support the healthd logs from AWS Elastic Beanstalk logs: [AWS](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/health-enhanced-serverlogs.html)
+
+### Statsd Logger
+
+- Output `response_time` and `count` statistics for each request to a statsd host
+
+## Testing
+
+Helpers for use when running tests
+
+```bash
+$ go get github.com/graze/golang-service/testing
+```
+
+# Development
+
+## Testing
 To run tests, run this on your host machine:
 
 ```

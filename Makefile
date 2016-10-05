@@ -3,8 +3,7 @@
 
 .DEFAULT_GOAL=help
 
-DOCKER_CMD=docker-compose run --rm logging
-DOCKER_CMD_FROM_ROOT=docker-compose run --rm -w /go logging
+DOCKER_CMD=docker-compose run --rm golang
 VERSION=`git describe --tags`
 LDFLAGS=-ldflags "-X github.com/graze/logging/version.version=${VERSION}"
 
@@ -19,10 +18,10 @@ cli:
 	${DOCKER_CMD} sh
 
 test: ## Run all tests
-	${DOCKER_CMD} go test
+	${DOCKER_CMD} go test ./logging ./testing
 
 doc: ## Build API documentation
-	${DOCKER_CMD} godoc github.com/graze/logging
+	${DOCKER_CMD} godoc github.com/graze/golang-service
 
 # Build targets
 .SILENT: help
