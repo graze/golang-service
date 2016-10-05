@@ -14,25 +14,20 @@ import (
     "testing"
     "github.com/stretchr/testify/assert"
     "github.com/DataDog/datadog-go/statsd"
+    "github.com/graze/golang-service/nettest"
     "time"
-    "net"
+    "os"
     "net/http"
 )
 
 func TestStatsdLogging(t *testing.T) {
-    addr := "localhost:1201"
-	udpAddr, err := net.ResolveUDPAddr("udp", addr)
-	if err != nil {
-		t.Fatal(err)
-	}
+    done := make(chan string)
+    addr, sock, srvWg := nettest.CreateServer(t, "udp", "localhost:", done)
+    defer srvWg.Wait()
+    defer os.Remove(addr.String())
+    defer sock.Close()
 
-	server, err := net.ListenUDP("udp", udpAddr)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer server.Close()
-
-	client, err := statsd.New(addr)
+	client, err := statsd.New(addr.String())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,14 +55,7 @@ func TestStatsdLogging(t *testing.T) {
     }
 
     for _, message := range expected {
-        buffer := make([]byte, 1024)
-        n, err := server.Read(buffer)
-        if err != nil {
-            t.Fatal(err)
-        }
-        log := string(buffer[:n])
-
-        assert.Equal(t, message, log)
+        assert.Equal(t, message, <-done)
     }
 
     ts = time.Date(1983, 05, 26, 3, 30, 45, int((123 * time.Millisecond).Nanoseconds()), loc)
@@ -86,13 +74,6 @@ func TestStatsdLogging(t *testing.T) {
     writeStatsdLog(client, req, *req.URL, ts, dur, http.StatusOK, 100)
 
     for _, message := range expected {
-        buffer := make([]byte, 1024)
-        n, err := server.Read(buffer)
-        if err != nil {
-            t.Fatal(err)
-        }
-        log := string(buffer[:n])
-
-        assert.Equal(t, message, log)
+        assert.Equal(t, message, <-done)
     }
 }

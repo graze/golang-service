@@ -18,12 +18,18 @@ import (
     "fmt"
 )
 
-func TestCreateServerWithTCPConnections(t *testing.T) {
-    cases := map[string]struct{net, msg, la string}{
-        "base": { "tcp", "test", "localhost:"},
-        "specied port": { "tcp", "test", "localhost:1201"},
-        "ip addresss": { "tcp", "test", "127.0.0.1:"},
-        "udp": {"udp", "test", "localhost:"},
+func TestCreateServer(t *testing.T) {
+    cases := map[string]struct{
+        net string
+        msgs []string
+        la string
+    }{
+        "base": { "tcp", []string{"test"}, "localhost:"},
+        "specied port": { "tcp", []string{"test"}, "localhost:1201"},
+        "ip addresss": { "tcp", []string{"test"}, "127.0.0.1:"},
+        "multiple messages": { "tcp", []string{"test", "test2"}, "127.0.0.1:"},
+        "udp": {"udp", []string{"test"}, "localhost:"},
+        "udp multiple messages": {"udp", []string{"test", "test2"}, "localhost:0"},
     }
 
     for k, tc := range cases {
@@ -39,8 +45,10 @@ func TestCreateServerWithTCPConnections(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%s: Dial() failed: %v", k, err)
 		}
-		fmt.Fprintf(s, tc.msg + "\n")
-		assert.Equal(t, tc.msg + "\n", <-done, "test: %s", k)
+        for _, msg := range tc.msgs {
+            fmt.Fprintf(s, msg + "\n")
+    		assert.Equal(t, msg + "\n", <-done, "test: %s", k)
+        }
 		s.Close()
     }
 }

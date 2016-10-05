@@ -79,7 +79,7 @@ func readStream(l net.Listener, done chan<- string, wg *sync.WaitGroup) {
         wg.Add(1)
         go func(c net.Conn) {
             defer wg.Done()
-            c.SetReadDeadline(time.Now().Add(1 * time.Second))
+            c.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
             b := bufio.NewReader(c)
             for ct := 1; ct&7 != 0; ct++ {
                 s, err := b.ReadString('\n')
@@ -95,7 +95,6 @@ func readStream(l net.Listener, done chan<- string, wg *sync.WaitGroup) {
 
 func readPackets(c net.PacketConn, done chan<- string) {
     var buf [4096]byte
-    var rcvd string
     ct := 0
     for {
         var n int
@@ -103,17 +102,17 @@ func readPackets(c net.PacketConn, done chan<- string) {
 
         c.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
         n, _, err = c.ReadFrom(buf[:])
-        rcvd += string(buf[:n])
+        rcvd := string(buf[:n])
         if err != nil {
             if oe, ok := err.(*net.OpError); ok {
-            if ct < 3 && oe.Temporary() {
-                ct++
-                continue
-                }
-            }
-        break
+    			if ct < 3 && oe.Temporary() {
+    				ct++
+    				continue
+    			}
+    		}
+    		break
         }
+        done <- rcvd
     }
     c.Close()
-    done <- rcvd
 }

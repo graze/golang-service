@@ -26,7 +26,12 @@ _testmain.go
 # Exclude third party directories but track our stuff.
 # This inclusion/exclusion mechanism is a bit nasty
 bin/
-src/
+src/*
+!src/github.com/
+src/github.com/*
+!src/github.com/graze
+src/github.com/graze/*
+!src/github.com/graze/golang-service
 
 # Go binaries
 bin/

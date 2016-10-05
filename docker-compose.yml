@@ -4,4 +4,4 @@ services:
         build: .
         volumes:
             - .:/go
-        working_dir: "/go"
+        working_dir: "/go/src/github.com/graze/golang-service"
