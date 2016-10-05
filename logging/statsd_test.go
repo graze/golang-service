@@ -14,7 +14,7 @@ import (
     "testing"
     "github.com/stretchr/testify/assert"
     "github.com/DataDog/datadog-go/statsd"
-    "github.com/graze/golang-service/nettest"
+    "../nettest"
     "time"
     "os"
     "net/http"

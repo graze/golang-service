@@ -4,21 +4,18 @@
 .DEFAULT_GOAL=help
 
 DOCKER_CMD=docker-compose run --rm golang
+DOCKER_CMD_FROM_ROOT=docker-compose run -w /go golang
 VERSION=`git describe --tags`
-LDFLAGS=-ldflags "-X github.com/graze/logging/version.version=${VERSION}"
+LDFLAGS=-ldflags "-X github.com/graze/golang-service/version.version=${VERSION}"
 
-install: ## Install dependencies
-	mkdir -p bin
-	${DOCKER_CMD} go get \
-		github.com/DataDog/datadog-go/statsd \
-		github.com/gorilla/handlers \
-		github.com/stretchr/testify/assert
+build:
+	docker-compose build
 
 cli:
 	${DOCKER_CMD} sh
 
 test: ## Run all tests
-	${DOCKER_CMD} go test -v ./...
+	${DOCKER_CMD} go test ./...
 
 doc: ## Build API documentation
 	${DOCKER_CMD} godoc github.com/graze/golang-service
