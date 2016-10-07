@@ -5,8 +5,8 @@
 // For the full copyright and license information, please view the LICENSE
 // file that was distributed with this source code.
 //
-// @license https://github.com/graze/golang-service/blob/master/LICENSE
-// @link    https://github.com/graze/golang-service
+// license: https://github.com/graze/golang-service/blob/master/LICENSE
+// link:    https://github.com/graze/golang-service
 
 package logging
 
@@ -36,7 +36,7 @@ func TestHealthdLogging(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ts := time.Date(1983, 05, 26, 3, 30, 45, int((736 * time.Millisecond).Nanoseconds()), loc)
+	ts := time.Date(1983, 05, 26, 3, 30, 45, int((736 * time.Millisecond).Nanoseconds()), loc).UTC()
 
 	// A typical request with an OK response
 	req := newRequest("GET", "http://example.com")
@@ -52,7 +52,7 @@ func TestHealthdLogging(t *testing.T) {
 
     assert.Equal(t, strings.Join([]string{`422764245.736"/"200"0.302"0.302"192.168.100.5`,"\n"}, ""), log)
 
-    ts = time.Date(1983, 05, 26, 3, 30, 45, int((123 * time.Millisecond).Nanoseconds()), loc)
+    ts = time.Date(1983, 05, 26, 3, 30, 45, int((123 * time.Millisecond).Nanoseconds()), loc).UTC()
     req = newRequest("GET", "http://example.com/path/here")
 
     buf = new(bytes.Buffer)

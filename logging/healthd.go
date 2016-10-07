@@ -26,11 +26,11 @@ type healthdHandler struct {
 
 // ServeHTTP does the actual handling of HTTP requests by wrapping the request in a logger
 func (h healthdHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-    t := time.Now()
+    t := time.Now().UTC()
 	logger := MakeLogger(w)
 	url := *req.URL
 	h.handler.ServeHTTP(logger, req)
-    dur := time.Since(t)
+    dur := time.Now().UTC().Sub(t)
 	writeHealthdLog(h.writer, req, url, t, dur, logger.Status(), logger.Size())
 }
 

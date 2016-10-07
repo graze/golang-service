@@ -26,11 +26,11 @@ type statsdHandler struct {
 
 // ServeHTTP does the actual handling of HTTP requests by wrapping the request in a logger
 func (h statsdHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-    t := time.Now()
+    t := time.Now().UTC()
 	logger := MakeLogger(w)
 	url := *req.URL
 	h.handler.ServeHTTP(logger, req)
-    dur := time.Since(t)
+    dur := time.Now().UTC().Sub(t)
 	writeStatsdLog(h.statsd, req, url, t, dur, logger.Status(), logger.Size())
 }
 
