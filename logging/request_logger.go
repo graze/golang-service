@@ -14,8 +14,6 @@ import (
     "net"
     "net/http"
     "bufio"
-    "strconv"
-    "unicode/utf8"
 )
 
 // MakeLogger creates a loggingResponseWriter from a http.ResponseWriter
