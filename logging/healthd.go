@@ -5,8 +5,8 @@
 // For the full copyright and license information, please view the LICENSE
 // file that was distributed with this source code.
 //
-// @license https://github.com/graze/golang-service-logging/blob/master/LICENSE
-// @link    https://github.com/graze/golang-service-logging
+// license: https://github.com/graze/golang-service/blob/master/LICENSE
+// link:    https://github.com/graze/golang-service
 
 package logging
 
@@ -16,6 +16,7 @@ import (
 	"net/url"
     "time"
     "strconv"
+    "fmt"
 )
 
 type healthdHandler struct {
@@ -23,6 +24,7 @@ type healthdHandler struct {
     handler http.Handler
 }
 
+// ServeHTTP does the actual handling of HTTP requests by wrapping the request in a logger
 func (h healthdHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     t := time.Now()
 	logger := MakeLogger(w)
@@ -52,22 +54,15 @@ func writeHealthdLog(w io.Writer, req *http.Request, url url.URL, ts time.Time, 
         uri = url.RequestURI()
     }
 
-    buf := make([]byte, 0)
-    buf = append(buf, strconv.FormatFloat(float64(ts.UnixNano()) / (float64(time.Second)/float64(time.Nanosecond)), 'f', 3, 64)...)
-    buf = append(buf, `"`...)
-    buf = AppendQuoted(buf, uri)
-    buf = append(buf, `"`...)
-    buf = append(buf, strconv.Itoa(status)...)
-    buf = append(buf, `"`...)
-
     msDur := float64(dur.Nanoseconds()) / (float64(time.Second)/float64(time.Nanosecond))
-    buf = append(buf, strconv.FormatFloat(msDur, 'f', 3, 64)...)
-    buf = append(buf, `"`...)
-    buf = append(buf, strconv.FormatFloat(msDur, 'f', 3, 64)...)
-    buf = append(buf, `"`...)
-    buf = append(buf, req.Header.Get("X-Forwarded-For")...)
-    buf = append(buf, '\n')
-    w.Write(buf)
+    str := fmt.Sprintf(`%.3f%s%d"%.3f"%.3f"%s` + "\n",
+        float64(ts.UnixNano()) / (float64(time.Second)/float64(time.Nanosecond)),
+        strconv.Quote(uri),
+        status,
+        msDur,
+        msDur,
+        req.Header.Get("X-Forwarded-For"))
+    io.WriteString(w, str)
 }
 
 // HealthdHandler return a http.Handler that wraps h and logs request to out in

@@ -5,8 +5,8 @@
 // For the full copyright and license information, please view the LICENSE
 // file that was distributed with this source code.
 //
-// @license https://github.com/graze/golang-service-logging/blob/master/LICENSE
-// @link    https://github.com/graze/golang-service-logging
+// license: https://github.com/graze/golang-service/blob/master/LICENSE
+// link:    https://github.com/graze/golang-service
 
 package logging
 

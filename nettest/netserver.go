@@ -5,8 +5,8 @@
 // For the full copyright and license information, please view the LICENSE
 // file that was distributed with this source code.
 //
-// @license https://github.com/graze/golang-service-logging/blob/master/LICENSE
-// @link    https://github.com/graze/golang-service-logging
+// license: https://github.com/graze/golang-service/blob/master/LICENSE
+// link:    https://github.com/graze/golang-service
 
 package nettest
 
@@ -21,6 +21,23 @@ import (
     "os"
 )
 
+// CreateServer creates a network server that will output all messages to the done channel for use with testing
+//
+// It can create `udp`, `unixgram`, and `tcp` networks
+//
+// Example:
+//  done := make(chan string)
+//  addr, sock, srvWg := CreateServer(t, tc.net, tc.la, done)
+//  defer srvWg.Wait()
+//  defer os.Remove(addr.String())
+//  defer sock.Close()
+//
+//  s, err := net.Dial(tc.net, addr.String())
+//  defer s.Close()
+//  fmt.Fprintf(s, "test message\n")
+//  if "test message\n" != <-done {
+//      t.Error("message not recieved")
+//  }
 func CreateServer(t *testing.T, n, la string, done chan<- string) (addr net.Addr, sock io.Closer, wg *sync.WaitGroup) {
     if n == "udp" || n == "tcp" {
         la = "127.0.0.1:0"

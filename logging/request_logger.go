@@ -5,8 +5,8 @@
 // For the full copyright and license information, please view the LICENSE
 // file that was distributed with this source code.
 //
-// @license https://github.com/graze/golang-service-logging/blob/master/LICENSE
-// @link    https://github.com/graze/golang-service-logging
+// license: https://github.com/graze/golang-service/blob/master/LICENSE
+// link:    https://github.com/graze/golang-service
 
 package logging
 
@@ -18,7 +18,14 @@ import (
     "unicode/utf8"
 )
 
+// MakeLogger creates a loggingResponseWriter from a http.ResponseWriter
+//
+// The loggingResponsWriter adds status field and the size of the response to the loggingResponseWriter
 func MakeLogger(w http.ResponseWriter) loggingResponseWriter {
+    if _, ok := w.(loggingResponseWriter); ok {
+        return w.(loggingResponseWriter)
+    }
+
 	var logger loggingResponseWriter = &responseLogger{w: w}
 	if _, ok := w.(http.Hijacker); ok {
 		logger = &hijackLogger{responseLogger{w: w}}
@@ -107,71 +114,4 @@ type hijackCloseNotifier struct {
 	loggingResponseWriter
 	http.Hijacker
 	http.CloseNotifier
-}
-
-const lowerhex = "0123456789abcdef"
-
-func AppendQuoted(buf []byte, s string) []byte {
-	var runeTmp [utf8.UTFMax]byte
-	for width := 0; len(s) > 0; s = s[width:] {
-		r := rune(s[0])
-		width = 1
-		if r >= utf8.RuneSelf {
-			r, width = utf8.DecodeRuneInString(s)
-		}
-		if width == 1 && r == utf8.RuneError {
-			buf = append(buf, `\x`...)
-			buf = append(buf, lowerhex[s[0]>>4])
-			buf = append(buf, lowerhex[s[0]&0xF])
-			continue
-		}
-		if r == rune('"') || r == '\\' { // always backslashed
-			buf = append(buf, '\\')
-			buf = append(buf, byte(r))
-			continue
-		}
-		if strconv.IsPrint(r) {
-			n := utf8.EncodeRune(runeTmp[:], r)
-			buf = append(buf, runeTmp[:n]...)
-			continue
-		}
-		switch r {
-		case '\a':
-			buf = append(buf, `\a`...)
-		case '\b':
-			buf = append(buf, `\b`...)
-		case '\f':
-			buf = append(buf, `\f`...)
-		case '\n':
-			buf = append(buf, `\n`...)
-		case '\r':
-			buf = append(buf, `\r`...)
-		case '\t':
-			buf = append(buf, `\t`...)
-		case '\v':
-			buf = append(buf, `\v`...)
-		default:
-			switch {
-			case r < ' ':
-				buf = append(buf, `\x`...)
-				buf = append(buf, lowerhex[s[0]>>4])
-				buf = append(buf, lowerhex[s[0]&0xF])
-			case r > utf8.MaxRune:
-				r = 0xFFFD
-				fallthrough
-			case r < 0x10000:
-				buf = append(buf, `\u`...)
-				for s := 12; s >= 0; s -= 4 {
-					buf = append(buf, lowerhex[r>>uint(s)&0xF])
-				}
-			default:
-				buf = append(buf, `\U`...)
-				for s := 28; s >= 0; s -= 4 {
-					buf = append(buf, lowerhex[r>>uint(s)&0xF])
-				}
-			}
-		}
-	}
-	return buf
-
 }

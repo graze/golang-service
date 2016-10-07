@@ -5,10 +5,10 @@
 // For the full copyright and license information, please view the LICENSE
 // file that was distributed with this source code.
 //
-// @license https://github.com/graze/golang-service-logging/blob/master/LICENSE
-// @link    https://github.com/graze/golang-service-logging
-package logging
+// license: https://github.com/graze/golang-service/blob/master/LICENSE
+// link:    https://github.com/graze/golang-service
 
+package logging
 
 import (
     "github.com/DataDog/datadog-go/statsd"
@@ -24,6 +24,7 @@ type statsdHandler struct {
     handler http.Handler
 }
 
+// ServeHTTP does the actual handling of HTTP requests by wrapping the request in a logger
 func (h statsdHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     t := time.Now()
 	logger := MakeLogger(w)

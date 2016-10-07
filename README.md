@@ -10,23 +10,35 @@ Collection of Logging helpers for use by HTTP services
 $ go get github.com/graze/golang-service/logging
 ```
 
+### Healthd Logger
+
+- Support the healthd logs from AWS Elastic Beanstalk logs: [AWS](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/health-enhanced-serverlogs.html)
+
+Usage:
+```go
+r := mux.NewRouter()
+r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+   w.Write([]byte("This is a catch-all route"))
+})
+c, err := statsd.New("127.0.0.1:8125")
+loggedRouter := logging.StatsdHandler(c, r)
+http.ListenAndServe(":1123", loggedRouter)
+```
+
+### Statsd Logger
+
+- Output `response_time` and `count` statistics for each request to a statsd host
+
+Usage:
 ```go
 func statsdHandler(h http.Handler) http.Handler {
-    client, err := stats.New("<ip>:<port>")
+    client, err := statsd.New("<ip>:<port>")
     if err != nil {
         panic(err)
     }
     return logging.StatsdHandler(client, h)
 }
 ```
-
-### Healthd Logger
-
-- Support the healthd logs from AWS Elastic Beanstalk logs: [AWS](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/health-enhanced-serverlogs.html)
-
-### Statsd Logger
-
-- Output `response_time` and `count` statistics for each request to a statsd host
 
 ## NetTest
 
