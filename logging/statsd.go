@@ -16,7 +16,6 @@ import (
     "net/url"
     "time"
     "strconv"
-    "strings"
 )
 
 type statsdHandler struct {
@@ -36,7 +35,7 @@ func (h statsdHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 // writeStatsdLog send the response time and a counter for each request to statsd
 func writeStatsdLog(w *statsd.Client, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
-    uri := req.RequestURI
+    uri := url.EscapedPath()
 
     // Requests using the CONNECT method over HTTP/2.0 must use
     // the authority field (aka r.Host) to identify the target.
@@ -45,13 +44,22 @@ func writeStatsdLog(w *statsd.Client, req *http.Request, url url.URL, ts time.Ti
         uri = req.Host
     }
     if uri == "" {
-        uri = url.RequestURI()
+        parsed, err := url.Parse(req.RequestURI)
+        if err != nil {
+            uri = "unknown"
+        } else {
+            uri = parsed.EscapedPath()
+        }
+    }
+    if uri == "" {
+        uri = "/"
     }
 
     tags := []string{
-        strings.Join([]string{"endpoint", uri}, ":"),
-        strings.Join([]string{"statusCode", strconv.Itoa(status)}, ":"),
-        strings.Join([]string{"method", req.Method}, ":"),
+        "endpoint:" + uri,
+        "statusCode:" + strconv.Itoa(status),
+        "method:" + req.Method,
+        "protocol:" + req.Proto,
     }
 
     msDur := float64(dur.Nanoseconds() / (int64(time.Millisecond)/int64(time.Nanosecond)))
