@@ -20,6 +20,7 @@ func SyslogHandler(h http.Handler) http.Handler {
     return handlers.CombinedLoggingHandler(logWriter, h)
 }
 
+// SyslogConf is a configuration struct to be able to create a SysLog writer
 type SyslogConf struct {
     network string
     host, port, application string
@@ -47,11 +48,11 @@ func GetSysLog(conf SyslogConf) (logWriter *syslog.Writer, err error) {
 //
 // Uses the application environments:
 //
-// - `SYSLOG_NETWORK`: The network type of the syslog server (tcp, udp) Leave blank for local syslog
-// - `SYSLOG_HOST`: The host of the syslog server. Leave blank for local syslog
-// - `SYSLOG_PORT`: The port of the syslog server
-// - `SYSLOG_APPLICATION`: The application to report the logs as
-// - `SYSLOG_LEVEL`: The level to limit messages to (default: LEVEL6)
+//  SYSLOG_NETWORK: The network type of the syslog server (tcp, udp) Leave blank for local syslog
+//  SYSLOG_HOST: The host of the syslog server. Leave blank for local syslog
+//  SYSLOG_PORT: The port of the syslog server
+//  SYSLOG_APPLICATION: The application to report the logs as
+//  SYSLOG_LEVEL: The level to limit messages to (default: LEVEL6)
 //
 // Returns a *syslog.Writer
 func GetSysLogFromEnv() (logWriter *syslog.Writer, err error) {

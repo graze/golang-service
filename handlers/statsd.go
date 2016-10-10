@@ -1,8 +1,8 @@
 package handlers
 
 import (
-    "github.com/graze/golang-service/logging"
     "github.com/DataDog/datadog-go/statsd"
+    "github.com/graze/golang-service/logging"
     "net/http"
     "strings"
     "os"
@@ -18,6 +18,7 @@ func StatsdHandler(h http.Handler) http.Handler {
     return logging.StatsdHandler(client, h)
 }
 
+// StatsdClientConf is a configuration struct to create a StatsD client
 type StatsdClientConf struct {
     host, port, namespace string
     tags []string
@@ -39,10 +40,10 @@ func GetStatsd(conf StatsdClientConf) (client *statsd.Client, err error) {
 //
 // Uses the application environments:
 //
-// - `STATSD_HOST`: The host of the statsd server
-// - `STATSD_PORT`: The port of the statsd server
-// - `STATSD_NAMESPACE`: The namespace to prefix to every metric name
-// - `STATSD_TAGS`: A comma separared list of tags to apply to every metric reported
+//  STATSD_HOST: The host of the statsd server
+//  STATSD_PORT: The port of the statsd server
+//  STATSD_NAMESPACE: The namespace to prefix to every metric name
+//  STATSD_TAGS: A comma separared list of tags to apply to every metric reported
 //
 // Returns a statsd.Client
 func GetStatsdFromEnv() (client *statsd.Client, err error) {

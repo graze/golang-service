@@ -11,6 +11,6 @@ package golangservice
 
 import (
     _ "github.com/graze/golang-service/logging"
-    _ "github.com/graze/golang-service/logging/handlers"
+    _ "github.com/graze/golang-service/handlers"
     _ "github.com/graze/golang-service/nettest"
 )
