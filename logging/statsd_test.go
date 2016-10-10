@@ -21,15 +21,15 @@ import (
     "net/url"
 )
 
-func TestStatsdLogging(t *testing.T) {
-    getDuration := func(dur string) (duration time.Duration) {
-        duration, err := time.ParseDuration(dur)
-        if err != nil {
-            t.Fatal(err)
-        }
-        return
+func getDuration(t *testing.T, dur string) (duration time.Duration) {
+    duration, err := time.ParseDuration(dur)
+    if err != nil {
+        t.Fatal(err)
     }
+    return
+}
 
+func TestStatsdLogging(t *testing.T) {
     cases := map[string]struct{
         request *http.Request
         timestamp time.Time
@@ -39,7 +39,7 @@ func TestStatsdLogging(t *testing.T) {
         "basic": {
             newRequest("GET", "http://example.com"),
             time.Now().UTC(),
-            getDuration("0.302s"),
+            getDuration(t, "0.302s"),
             []string{
                 "service.logging.live.request.response_time:302.000000|ms|#test,endpoint:/,statusCode:200,method:GET,protocol:HTTP/1.1",
                 "service.logging.live.request.count:1|c|#test,endpoint:/,statusCode:200,method:GET,protocol:HTTP/1.1",
@@ -48,7 +48,7 @@ func TestStatsdLogging(t *testing.T) {
         "post path": {
             newRequest("POST", "http://example.com/path/here"),
             time.Now().UTC(),
-            getDuration("0.102s"),
+            getDuration(t, "0.102s"),
             []string{
                 "service.logging.live.request.response_time:102.000000|ms|#test,endpoint:/path/here,statusCode:200,method:POST,protocol:HTTP/1.1",
                 "service.logging.live.request.count:1|c|#test,endpoint:/path/here,statusCode:200,method:POST,protocol:HTTP/1.1",
@@ -57,7 +57,7 @@ func TestStatsdLogging(t *testing.T) {
         "strips params off method": {
             newRequest("GET", "http://example.com/token/1/test?apid=1&thing=2"),
             time.Now().UTC(),
-            getDuration("0.927s"),
+            getDuration(t, "0.927s"),
             []string{
                 "service.logging.live.request.response_time:927.000000|ms|#test,endpoint:/token/1/test,statusCode:200,method:GET,protocol:HTTP/1.1",
                 "service.logging.live.request.count:1|c|#test,endpoint:/token/1/test,statusCode:200,method:GET,protocol:HTTP/1.1",
@@ -74,7 +74,7 @@ func TestStatsdLogging(t *testing.T) {
                 RemoteAddr: "192.168.100.5",
             },
             time.Now().UTC(),
-            getDuration("0.927s"),
+            getDuration(t, "0.927s"),
             []string{
                 "service.logging.live.request.response_time:927.000000|ms|#test,endpoint:www.example.com:443,statusCode:200,method:CONNECT,protocol:HTTP/2.0",
                 "service.logging.live.request.count:1|c|#test,endpoint:www.example.com:443,statusCode:200,method:CONNECT,protocol:HTTP/2.0",
