@@ -16,7 +16,6 @@ import (
     "time"
     "net/http"
     "bytes"
-    "strings"
 )
 
 var okHandler = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -32,11 +31,11 @@ func newRequest(method, url string) *http.Request {
 }
 
 func TestHealthdLogging(t *testing.T) {
-    loc, err := time.LoadLocation("Europe/London")
+    loc, err := time.LoadLocation("UTC")
 	if err != nil {
 		t.Fatal(err)
 	}
-	ts := time.Date(1983, 05, 26, 3, 30, 45, int((736 * time.Millisecond).Nanoseconds()), loc).UTC()
+	ts := time.Date(1983, 05, 26, 3, 30, 45, int((736 * time.Millisecond).Nanoseconds()), loc)
 
 	// A typical request with an OK response
 	req := newRequest("GET", "http://example.com")
@@ -50,7 +49,7 @@ func TestHealthdLogging(t *testing.T) {
     writeHealthdLog(buf, req, *req.URL, ts, dur, http.StatusOK, 100)
     log := buf.String()
 
-    assert.Equal(t, strings.Join([]string{`422764245.736"/"200"0.302"0.302"192.168.100.5`,"\n"}, ""), log)
+    assert.Equal(t, `422767845.736"/"200"0.302"0.302"192.168.100.5` + "\n", log)
 
     ts = time.Date(1983, 05, 26, 3, 30, 45, int((123 * time.Millisecond).Nanoseconds()), loc).UTC()
     req = newRequest("GET", "http://example.com/path/here")
@@ -63,5 +62,5 @@ func TestHealthdLogging(t *testing.T) {
     writeHealthdLog(buf, req, *req.URL, ts, dur, http.StatusOK, 100)
     log = buf.String()
 
-    assert.Equal(t, strings.Join([]string{`422764245.123"/path/here"200"0.102"0.102"`,"\n"}, ""), log)
+    assert.Equal(t, `422767845.123"/path/here"200"0.102"0.102"` + "\n", log)
 }
