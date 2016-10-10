@@ -35,32 +35,35 @@ func TestHealthdLogging(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ts := time.Date(1983, 05, 26, 3, 30, 45, int((736 * time.Millisecond).Nanoseconds()), loc)
 
-	// A typical request with an OK response
-	req := newRequest("GET", "http://example.com")
-    req.Header.Add("X-Forwarded-For", "192.168.100.5")
+    headerRequest := newRequest("GET", "http://example.com")
+    headerRequest.Header.Add("X-Forwarded-For", "192.168.100.5")
 
-    buf := new(bytes.Buffer)
-    dur, err := time.ParseDuration("0.302s")
-    if (err != nil) {
-        t.Fatal(err)
+    cases := map[string]struct{
+        ts time.Time
+        dur time.Duration
+        req *http.Request
+        expected string
+    }{
+        "with header": {
+            time.Date(1983, 05, 26, 3, 30, 45, int((736 * time.Millisecond).Nanoseconds()), loc),
+            getDuration(t, "0.302s"),
+            headerRequest,
+            `422767845.736"/"200"0.302"0.302"192.168.100.5`,
+        },
+        "standard": {
+            time.Date(1983, 05, 26, 3, 30, 45, int((123 * time.Millisecond).Nanoseconds()), loc),
+            getDuration(t, "0.102s"),
+            newRequest("POST", "http://example.com/path/here"),
+            `422767845.123"/path/here"200"0.102"0.102"`,
+        },
     }
-    writeHealthdLog(buf, req, *req.URL, ts, dur, http.StatusOK, 100)
-    log := buf.String()
 
-    assert.Equal(t, `422767845.736"/"200"0.302"0.302"192.168.100.5` + "\n", log)
+    for k, tc := range cases {
+        buf := new(bytes.Buffer)
+        writeHealthdLog(buf, tc.req, *tc.req.URL, tc.ts, tc.dur, http.StatusOK, 100)
+        log := buf.String()
 
-    ts = time.Date(1983, 05, 26, 3, 30, 45, int((123 * time.Millisecond).Nanoseconds()), loc).UTC()
-    req = newRequest("GET", "http://example.com/path/here")
-
-    buf = new(bytes.Buffer)
-    dur, err = time.ParseDuration("0.102s")
-    if (err != nil) {
-        t.Fatal(err)
+        assert.Equal(t, tc.expected + "\n", log, "test: %s", k)
     }
-    writeHealthdLog(buf, req, *req.URL, ts, dur, http.StatusOK, 100)
-    log = buf.String()
-
-    assert.Equal(t, `422767845.123"/path/here"200"0.102"0.102"` + "\n", log)
 }
