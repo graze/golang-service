@@ -1,20 +1,14 @@
 # Targets which should always run, regardless of the state of anything else
 .PHONY: help
 
-.DEFAULT_GOAL=help
+.DEFAULT_GOAL=build
 
 DOCKER_CMD=docker-compose run --rm golang
-DOCKER_CMD_FROM_ROOT=docker-compose run -w /go golang
-VERSION=`git describe --tags`
-LDFLAGS=-ldflags "-X github.com/graze/golang-service/version.version=${VERSION}"
 
-build:
-	docker-compose build
+build: ## Install the dependencies
+	${DOCKER_CMD} glide install
 
-rebuild:
-	docker-compose build --no-cache
-
-cli:
+cli: ## Open a shell to the docker environment
 	${DOCKER_CMD} sh
 
 test: ## Run all tests

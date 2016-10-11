@@ -1,0 +1,13 @@
+package: github.com/graze/golang-service
+import:
+- package: github.com/DataDog/datadog-go
+  version: ^1.0.0
+  subpackages:
+  - statsd
+- package: github.com/gorilla/handlers
+  version: ^1.1.0
+testImport:
+- package: github.com/stretchr/testify
+  version: ^1.1.4
+  subpackages:
+  - assert

@@ -1,10 +1,7 @@
 FROM golang:alpine
-RUN apk add --no-cache git
+RUN apk add --no-cache git curl
 
 WORKDIR "/go"
 
-RUN go get \
-    github.com/DataDog/datadog-go/statsd \
-    github.com/gorilla/handlers \
-    github.com/stretchr/testify/assert \
-    golang.org/x/tools/cmd/godoc
+RUN curl https://glide.sh/get | sh
+RUN go get golang.org/x/tools/cmd/godoc

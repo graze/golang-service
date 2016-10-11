@@ -27,6 +27,11 @@ _testmain.go
 # This inclusion/exclusion mechanism is a bit nasty
 bin/
 src/
+vendor/
+
+# Exclude glide
+.glide/
+glide.lock
 
 # Go binaries
 bin/
