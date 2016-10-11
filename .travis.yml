@@ -1,17 +1,18 @@
-language: go
+language: shell
 
-sudo: false
+sudo: required
 
-go:
-  - 1.5
-  - 1.6
-  - 1.7
-  - tip
+services:
+  - docker
+
+env:
+  - ver=1.6-alpine
+  - ver=1.7-alpine
+  - ver=alpine
 
 install:
-  - go get github.com/DataDog/datadog-go/statsd
-  - go get github.com/gorilla/handlers
-  - go get github.com/stretchr/testify/assert
+  - docker-compose build
+  - make install
 
 script:
-  - go test -v ./...
+  - make test
