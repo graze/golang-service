@@ -12,7 +12,7 @@ cli: ## Open a shell to the docker environment
 	${DOCKER_CMD} sh
 
 test: ## Run all tests
-	${DOCKER_CMD} go test ./...
+	${DOCKER_CMD} go test ./nettest ./logging ./handlers
 
 doc: ## Build API documentation
 	${DOCKER_CMD} godoc github.com/graze/golang-service

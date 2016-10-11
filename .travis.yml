@@ -1,17 +1,17 @@
 language: go
 
-sudo: false
+sudo: required
+
+services:
+  - docker
 
 go:
-  - 1.5
   - 1.6
   - 1.7
   - tip
 
 install:
-  - go get github.com/DataDog/datadog-go/statsd
-  - go get github.com/gorilla/handlers
-  - go get github.com/stretchr/testify/assert
+  - make install
 
 script:
-  - go test -v ./...
+  - go test -v ./handlers ./logging ./nettest
