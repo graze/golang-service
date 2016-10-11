@@ -1,17 +1,17 @@
-language: go
+language: shell
 
 sudo: required
 
 services:
   - docker
 
-go:
-  - 1.6
-  - 1.7
-  - tip
+env:
+  - ver=1.6-alpine
+  - ver=1.7-alpine
+  - ver=alpine
 
 install:
   - make install
 
 script:
-  - go test -v ./handlers ./logging ./nettest
+  - make test
