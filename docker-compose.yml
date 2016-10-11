@@ -1,6 +1,6 @@
 version: '2'
 services:
-    golang:
+    local:
         build: .
         volumes:
             - .:/go/src/github.com/graze/golang-service
