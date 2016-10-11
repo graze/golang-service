@@ -1,11 +1,11 @@
 # Targets which should always run, regardless of the state of anything else
 .PHONY: help
 
-.DEFAULT_GOAL=build
+.DEFAULT_GOAL=install
 
 DOCKER_CMD=docker-compose run --rm golang
 
-build: ## Install the dependencies
+install: ## Install the dependencies
 	${DOCKER_CMD} glide install
 
 cli: ## Open a shell to the docker environment

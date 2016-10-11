@@ -147,7 +147,7 @@ if msg = "\n" != <-done {
 To run tests, run this on your host machine:
 
 ```
-$ make build
+$ make install
 $ make test
 ```
 
