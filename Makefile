@@ -1,12 +1,10 @@
 # Targets which should always run, regardless of the state of anything else
-.PHONY: help
+.PHONY: help install cli test doc
 
-.DEFAULT_GOAL=install
+.DEFAULT_GOAL=help
 
 DOCKER_CMD=docker-compose run --rm local
-ver=alpine
-PATH=/go/src/github.com/graze/golang-service
-TEST_CMD=docker run --rm -it -v $(PWD):${PATH} -w ${PATH} golang:${ver}
+MOUNT=/go/src/github.com/graze/golang-service
 
 install: ## Install the dependencies
 	${DOCKER_CMD} glide install
@@ -14,8 +12,9 @@ install: ## Install the dependencies
 cli: ## Open a shell to the docker environment
 	${DOCKER_CMD} sh
 
-test: ## Run all tests
-	${TEST_CMD} go test ./nettest ./logging ./handlers
+test: ver ?= alpine
+test: ## Run the tests
+	docker run --rm -it -v $(PWD):${MOUNT} -w ${MOUNT} golang:${ver} go test ./nettest ./logging ./handlers
 
 doc: ## Build API documentation
 	${DOCKER_CMD} godoc github.com/graze/golang-service
@@ -27,4 +26,4 @@ help: ## Show this help message
 	echo "Usage: make [target] ..."
 	echo ""
 	echo "Available targets:"
-	fgrep --no-filename "##" $(MAKEFILE_LIST) | fgrep --invert-match $$'\t' | sed -e 's/: ## / - /'
+	egrep '^(.+)\:\ ##\ (.+)' ${MAKEFILE_LIST} | column -t -c 2 -s ':#' | sort
