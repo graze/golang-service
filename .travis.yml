@@ -11,6 +11,7 @@ env:
   - ver=alpine
 
 install:
+  - docker-compose build
   - make install
 
 script:
