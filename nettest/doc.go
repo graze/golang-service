@@ -15,5 +15,4 @@
 //     if "test message\n" != <-done {
 //         t.Error("message not recieved")
 //     }
-
 package nettest

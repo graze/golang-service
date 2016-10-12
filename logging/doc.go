@@ -37,5 +37,4 @@ Usage:
     loggedRouter := logging.StatsdHandler(c, r)
     http.ListenAndServe(":1123", loggedRouter)
 */
-
 package logging

@@ -89,5 +89,4 @@ Usage:
     loggedRouter := handlers.SyslogHandler(r)
     http.ListenAndServe(":1123", loggedRouter)
 */
-
 package handlers
