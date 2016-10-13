@@ -85,7 +85,7 @@ func GetSysLogFromEnv() (logWriter *syslog.Writer, err error) {
         }
     }
 
-    level := syslog.LOG_LOCAL6
+    level := syslog.LOG_LOCAL6 | syslog.LOG_NOTICE
     if env["level"] != "" {
         i, err := strconv.Atoi(env["level"])
         if err != nil {
