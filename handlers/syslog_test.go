@@ -46,5 +46,5 @@ func TestRSyslogLogging(t *testing.T) {
 
     assert.Equal(t, http.StatusOK, rec.Code)
 
-    assert.Regexp(t, `<176>[0-9\-]+T[0-9:]+Z \w+ service\.application\[\d+\]:  - - \[\d{2}\/\w+\/\d{4}:\d{2}:\d{2}:\d{2} [\+\-]+\d+\] "GET \/ HTTP\/1\.1" 200 \d+ "" ""`, <-done)
+    assert.Regexp(t, `<181>[0-9\-]+T[0-9:]+Z \w+ service\.application\[\d+\]:  - - \[\d{2}\/\w+\/\d{4}:\d{2}:\d{2}:\d{2} [\+\-]+\d+\] "GET \/ HTTP\/1\.1" 200 \d+ "" ""`, <-done)
 }
