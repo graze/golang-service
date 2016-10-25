@@ -8,13 +8,17 @@
 // license: https://github.com/graze/golang-service/blob/master/LICENSE
 // link:    https://github.com/graze/golang-service
 
-package handlers
+package logging
 
 import (
-	"net/http"
+	"os"
+
+	"github.com/go-kit/kit/log"
 )
 
-// LoggingHandlers returns rsyslog, statsd and healthd chained handlers for use with AWS and Graze services
-func AllHandlers(h http.Handler) http.Handler {
-	return HealthdHandler(StatsdHandler(StructuredHandler(h)))
+var logger = log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
+
+// GetLogger returns a global opinionated logger that outputs to Stderr in Logfmt format
+func GetLogger() (logger log.Logger) {
+	return logger
 }

@@ -8,21 +8,32 @@
 // license: https://github.com/graze/golang-service/blob/master/LICENSE
 // link:    https://github.com/graze/golang-service
 
-package logging
+package handlers
 
 import (
-    "net"
-    "net/http"
-    "bufio"
+	"bufio"
+	"net"
+	"net/http"
+	"net/url"
+	"time"
 )
+
+func LogServeHTTP(w http.ResponseWriter, req *http.Request, handler http.Handler, caller func(req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int)) {
+	t := time.Now().UTC()
+	logger := MakeLogger(w)
+	url := *req.URL
+	handler.ServeHTTP(logger, req)
+	dur := time.Now().UTC().Sub(t)
+	caller(req, url, t, dur, logger.Status(), logger.Size())
+}
 
 // MakeLogger creates a loggingResponseWriter from a http.ResponseWriter
 //
 // The loggingResponsWriter adds status field and the size of the response to the loggingResponseWriter
 func MakeLogger(w http.ResponseWriter) loggingResponseWriter {
-    if _, ok := w.(loggingResponseWriter); ok {
-        return w.(loggingResponseWriter)
-    }
+	if _, ok := w.(loggingResponseWriter); ok {
+		return w.(loggingResponseWriter)
+	}
 
 	var logger loggingResponseWriter = &responseLogger{w: w}
 	if _, ok := w.(http.Hijacker); ok {

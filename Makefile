@@ -19,6 +19,10 @@ test: ## Run the tests
 doc: ## Build API documentation
 	${DOCKER_CMD} godoc github.com/graze/golang-service
 
+format: ## Run gofmt to format the code
+	${DOCKER_CMD} gofmt -s -w $$(${DOCKER_CMD} glide nv -x | tr '\n\r' ' ')
+	${DOCKER_CMD} goimports -w $$(${DOCKER_CMD} glide nv -x | tr '\n\r' ' ')
+
 # Build targets
 .SILENT: help
 help: ## Show this help message

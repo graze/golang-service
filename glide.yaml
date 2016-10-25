@@ -6,6 +6,10 @@ import:
   - statsd
 - package: github.com/gorilla/handlers
   version: ^1.1.0
+- package: github.com/go-kit/kit
+  version: ^0.2.0
+  subpackages:
+  - log
 testImport:
 - package: github.com/stretchr/testify
   version: ^1.1.4

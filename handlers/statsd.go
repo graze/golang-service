@@ -11,79 +11,92 @@
 package handlers
 
 import (
-    "github.com/DataDog/datadog-go/statsd"
-    "github.com/graze/golang-service/logging"
-    "net/http"
-    "strings"
-    "os"
-    "fmt"
+	"net/http"
+	"net/url"
+	"strconv"
+	"time"
+
+	"github.com/DataDog/datadog-go/statsd"
+	"github.com/graze/golang-service/logging"
 )
+
+type statsdHandler struct {
+	statsd  *statsd.Client
+	handler http.Handler
+}
+
+// ServeHTTP does the actual handling of HTTP requests by wrapping the request in a logger
+func (h statsdHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	LogServeHTTP(w, req, h.handler, h.writeLog)
+}
+
+// writeLog writes the log do the statsd client from a statsdHandler
+func (h statsdHandler) writeLog(req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
+	writeStatsdLog(h.statsd, req, url, ts, dur, status, size)
+}
+
+// uriPath extracts the path from a request uri
+func uriPath(req *http.Request, url url.URL) (uri string) {
+	uri = url.EscapedPath()
+
+	// Requests using the CONNECT method over HTTP/2.0 must use
+	// the authority field (aka r.Host) to identify the target.
+	// Refer: https://httpwg.github.io/specs/rfc7540.html#CONNECT
+	if req.ProtoMajor == 2 && req.Method == "CONNECT" {
+		uri = req.Host
+	}
+	if uri == "" {
+		parsed, err := url.Parse(req.RequestURI)
+		if err != nil {
+			uri = "unknown"
+		} else {
+			uri = parsed.EscapedPath()
+		}
+	}
+	if uri == "" {
+		uri = "/"
+	}
+	return
+}
+
+// writeStatsdLog send the response time and a counter for each request to statsd
+func writeStatsdLog(w *statsd.Client, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
+	uri := uriPath(req, url)
+
+	tags := []string{
+		"endpoint:" + uri,
+		"statusCode:" + strconv.Itoa(status),
+		"method:" + req.Method,
+		"protocol:" + req.Proto,
+	}
+
+	msDur := float64(dur.Nanoseconds() / (int64(time.Millisecond) / int64(time.Nanosecond)))
+
+	w.TimeInMilliseconds("request.response_time", msDur, tags, 1)
+	w.Incr("request.count", tags, 1)
+}
+
+// StatsdIoHandler returns a http.Handler that wraps h and logs request to statsd
+//
+// Example:
+//
+//  r := mux.NewRouter()
+//  r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+//  	w.Write([]byte("This is a catch-all route"))
+//  })
+//  c, err := statsd.New("127.0.0.1:8125")
+//  loggedRouter := logging.StatsdHandler(c, r)
+//  http.ListenAndServe(":1123", loggedRouter)
+//
+func StatsdIoHandler(out *statsd.Client, h http.Handler) http.Handler {
+	return statsdHandler{out, h}
+}
 
 // statsdHandler returns a logging.StatsdHandler to write request and response informtion to statsd
 func StatsdHandler(h http.Handler) http.Handler {
-    client, err := GetStatsdFromEnv()
-    if err != nil {
-        panic(err)
-    }
-    return logging.StatsdHandler(client, h)
-}
-
-// StatsdClientConf is a configuration struct to create a StatsD client
-type StatsdClientConf struct {
-    host, port, namespace string
-    tags []string
-}
-
-// GetStatsd returns a statsd client based on the supplied StatsdClientConf
-func GetStatsd(conf StatsdClientConf) (client *statsd.Client, err error) {
-    client, err = statsd.New(conf.host + ":" + conf.port)
-    if err != nil {
-        return nil, err
-    }
-
-    client.Namespace = conf.namespace
-    client.Tags = append(client.Tags, conf.tags...)
-    return
-}
-
-// GetStatsdFromEnv creates a statsd client based on the environment of the application
-//
-// Uses the application environments:
-//
-//  STATSD_HOST: The host of the statsd server
-//  STATSD_PORT: The port of the statsd server
-//  STATSD_NAMESPACE: The namespace to prefix to every metric name
-//  STATSD_TAGS: A comma separared list of tags to apply to every metric reported
-//
-// Returns a statsd.Client
-func GetStatsdFromEnv() (client *statsd.Client, err error) {
-    names := []struct{
-        name, env string
-        req bool
-    }{
-        {"host", "STATSD_HOST", true},
-        {"port", "STATSD_PORT", true},
-        {"namespace", "STATSD_NAMESPACE", false},
-        {"tags", "STATSD_TAGS", false},
-    }
-
-    env := make(map[string]string)
-
-    for _, v := range names {
-        env[v.name] = os.Getenv(v.env)
-        if v.req && env[v.name] == "" {
-            return nil, fmt.Errorf("Unable to get value for setting: %s", v.env)
-        }
-    }
-
-    tags := make([]string, 0)
-    for _, tag := range strings.Split(env["tags"], ",") {
-        if tag != "" {
-            tags = append(tags, tag)
-        }
-    }
-
-    conf := StatsdClientConf{env["host"], env["port"], env["namespace"], tags}
-
-    return GetStatsd(conf)
+	client, err := logging.GetStatsdFromEnv()
+	if err != nil {
+		panic(err)
+	}
+	return StatsdIoHandler(client, h)
 }

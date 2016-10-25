@@ -64,29 +64,17 @@ Usage:
     loggedRouter := handlers.StatsdHandler(r)
     http.ListenAndServe(":1123", loggedRouter)
 
-Syslog
+Structured
 
-Log requests to a syslog server
-
-Environment Variables:
-    SYSLOG_NETWORK: The network type of the syslog server (tcp, udp) Leave blank for local syslog
-    SYSLOG_HOST: The host of the syslog server. Leave blank for local syslog
-    SYSLOG_PORT: The port of the syslog server
-    SYSLOG_APPLICATION: The application to report the logs as
-    SYSLOG_LEVEL: The level to limit messages to (default: LEVEL6)
-
-Example:
-    SYSLOG_NETWORK: udp
-    SYSLOG_HOST: app.syslog.local
-    SYSLOG_PORT: 1234
-    SYSLOG_APPLICATION: app-live
+Log requests using a structured format for handling with json/logfmt
 
 Usage:
     r := mux.NewRouter()
     r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-	   w.Write([]byte("This is a catch-all route"))
+        w.Write([]byte("This is a catch-all route"))
     })
-    loggedRouter := handlers.SyslogHandler(r)
+    logger := log.NewLogfmtLogger(os.Stdout)
+    loggedRouter := logging.StructuredHandler(log.NewContext(log).With("component", "handler"), r)
     http.ListenAndServe(":1123", loggedRouter)
 */
 package handlers
