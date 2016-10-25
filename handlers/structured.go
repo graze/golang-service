@@ -16,12 +16,11 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/go-kit/kit/log"
-	"github.com/graze/golang-service/logging"
+	log "github.com/Sirupsen/logrus"
 )
 
 type structuredHandler struct {
-	logger  log.Logger
+	logger  log.FieldLogger
 	handler http.Handler
 }
 
@@ -39,29 +38,28 @@ func (h structuredHandler) writeLog(req *http.Request, url url.URL, ts time.Time
 // ts is the timestamp with wich the entry should be logged
 // dur is the time taken by the server to generate the response
 // status and size are used to provide response HTTP status and size
-func writeStructuredLog(logger log.Logger, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
+func writeStructuredLog(logger log.FieldLogger, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
 	sDur := float64(dur.Nanoseconds()) / (float64(time.Second) / float64(time.Nanosecond))
 	uri := parseUri(req, url)
 
-	logger.Log(
-		"tag", "request_handled",
-		"msg", fmt.Sprintf("%s %s %s", req.Method, uri, req.Proto),
-		"method", req.Method,
-		"protocol", req.Proto,
-		"uri", uri,
-		"path", uriPath(req, url),
-		"host", req.Host,
-		"status", status,
-		"bytes", size,
-		"dur", sDur,
-		"ts", ts.Format(time.RFC3339Nano),
-		"ref", req.Referer(),
-		"user", req.Header.Get("X-Forwarded-For"),
-	)
+	logger.WithFields(log.Fields{
+		"tag":      "request_handled",
+		"method":   req.Method,
+		"protocol": req.Proto,
+		"uri":      uri,
+		"path":     uriPath(req, url),
+		"host":     req.Host,
+		"status":   status,
+		"bytes":    size,
+		"dur":      sDur,
+		"ts":       ts.Format(time.RFC3339Nano),
+		"ref":      req.Referer(),
+		"user":     req.Header.Get("X-Forwarded-For"),
+	}).Info(fmt.Sprintf("%s %s %s", req.Method, uri, req.Proto))
 }
 
 // StructuredHandler return a http.Handler that wraps h and logs request to out in
-// a go-kit/log/Logger structured format
+// a structured format that can be outputted in json or logfmt
 //
 // Example:
 //
@@ -69,18 +67,22 @@ func writeStructuredLog(logger log.Logger, req *http.Request, url url.URL, ts ti
 //  r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 //  	w.Write([]byte("This is a catch-all route"))
 //  })
-//  logger := log.NewLogfmtLogger(os.Stdout)
-//  loggedRouter := logging.StructuredHandler(logger, r)
+//  context := log.New().WithFields(log.Fields{
+//	  "application": "service"
+//	})
+//  loggedRouter := logging.StructuredHandler(context, r)
 //  http.ListenAndServe(":1123", loggedRouter)
 //
-func StructuredLogHandler(logger log.Logger, h http.Handler) http.Handler {
+func StructuredLogHandler(logger log.FieldLogger, h http.Handler) http.Handler {
 	return structuredHandler{logger, h}
 }
 
-// StructuredHandler returns an opinionated structuredHandler outputting to os.Stderr
-// in a new context and with
+// StructuredHandler returns an opinionated structuredHandler using the standard logger
+// and setting a context with the fields:
 // 	component = request.handler
 func StructuredHandler(h http.Handler) http.Handler {
-	logger := logging.GetLogger()
-	return structuredHandler{log.NewContext(logger).With("component", "request.handler"), h}
+	context := log.WithFields(log.Fields{
+		"component": "request.handler",
+	})
+	return structuredHandler{context, h}
 }

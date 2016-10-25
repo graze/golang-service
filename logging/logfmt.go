@@ -13,12 +13,12 @@ package logging
 import (
 	"os"
 
-	"github.com/go-kit/kit/log"
+	log "github.com/Sirupsen/logrus"
 )
 
-var logger = log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
-
-// GetLogger returns a global opinionated logger that outputs to Stderr in Logfmt format
-func GetLogger() (logger log.Logger) {
-	return logger
+// init initialises a logger
+func Init() {
+	log.SetFormatter(&log.TextFormatter{})
+	log.SetOutput(os.Stderr)
+	log.SetLevel(log.InfoLevel)
 }

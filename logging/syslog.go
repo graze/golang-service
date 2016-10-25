@@ -71,13 +71,11 @@ func GetSysLogFromEnv() (logWriter *syslog.Writer, err error) {
 
 	level := syslog.LOG_LOCAL6 | syslog.LOG_NOTICE
 	if env["level"] != "" {
-		fmt.Println(env["level"])
 		i, err := strconv.Atoi(env["level"])
 		if err != nil {
 			return nil, err
 		}
 		level = syslog.Priority(i)
-		fmt.Println(level)
 	}
 
 	conf := SyslogConf{env["network"], env["host"], env["port"], env["application"], level}
