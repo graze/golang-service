@@ -11,6 +11,7 @@
 package logging
 
 import (
+	"os"
 	"testing"
 
 	log "github.com/Sirupsen/logrus"
@@ -35,4 +36,16 @@ func TestLogfmtInit(t *testing.T) {
 	assert.Equal(t, "some text", hook.LastEntry().Message)
 	assert.Equal(t, log.ErrorLevel, hook.LastEntry().Level)
 	assert.Equal(t, 2, hook.LastEntry().Data["variable"])
+}
+
+func TestGetLogger(t *testing.T) {
+	os.Setenv("LOG_APPLICATION", "test")
+
+	logger := GetLogger()
+	hook := test.NewLocal(logger.Logger)
+
+	logger.Info("some text")
+	assert.Equal(t, 1, len(hook.Entries))
+	assert.Equal(t, "some text", hook.LastEntry().Message)
+	assert.Equal(t, "test", hook.LastEntry().Data["application"])
 }

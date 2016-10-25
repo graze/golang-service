@@ -17,6 +17,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/graze/golang-service/logging"
 )
 
 type structuredHandler struct {
@@ -81,7 +82,7 @@ func StructuredLogHandler(logger log.FieldLogger, h http.Handler) http.Handler {
 // and setting a context with the fields:
 // 	component = request.handler
 func StructuredHandler(h http.Handler) http.Handler {
-	context := log.WithFields(log.Fields{
+	context := logging.GetLogger().WithFields(log.Fields{
 		"component": "request.handler",
 	})
 	return structuredHandler{context, h}

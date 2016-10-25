@@ -17,8 +17,11 @@ import (
 )
 
 // init initialises a logger
-func Init() {
-	log.SetFormatter(&log.TextFormatter{})
-	log.SetOutput(os.Stderr)
-	log.SetLevel(log.InfoLevel)
+func GetLogger() (logger *log.Entry) {
+	logger = log.NewEntry(log.New())
+
+	if os.Getenv("LOG_APPLICATION") != "" {
+		logger = logger.WithField("application", os.Getenv("LOG_APPLICATION"))
+	}
+	return
 }
