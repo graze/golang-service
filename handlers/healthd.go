@@ -31,7 +31,7 @@ func (h healthdHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 // writeLog writes a log entry to healthdHandler's writer
-func (h healthdHandler) writeLog(w loggingResponseWriter, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
+func (h healthdHandler) writeLog(w LoggingResponseWriter, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
 	writeHealthdLog(h.writer, req, url, ts, dur, status, size)
 }
 

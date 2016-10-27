@@ -22,7 +22,7 @@ import (
 	"github.com/twinj/uuid"
 )
 
-func LogServeHTTP(w http.ResponseWriter, req *http.Request, handler http.Handler, caller func(w loggingResponseWriter, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int)) {
+func LogServeHTTP(w http.ResponseWriter, req *http.Request, handler http.Handler, caller func(w LoggingResponseWriter, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int)) {
 	t := time.Now().UTC()
 	logger := MakeLogger(w)
 	url := *req.URL
@@ -31,18 +31,18 @@ func LogServeHTTP(w http.ResponseWriter, req *http.Request, handler http.Handler
 	caller(logger, req, url, t, dur, logger.Status(), logger.Size())
 }
 
-// MakeLogger creates a loggingResponseWriter from a http.ResponseWriter
+// MakeLogger creates a LoggingResponseWriter from a http.ResponseWriter
 //
-// The loggingResponsWriter adds status field and the size of the response to the loggingResponseWriter
-func MakeLogger(w http.ResponseWriter) loggingResponseWriter {
-	if _, ok := w.(loggingResponseWriter); ok {
-		return w.(loggingResponseWriter)
+// The loggingResponsWriter adds status field and the size of the response to the LoggingResponseWriter
+func MakeLogger(w http.ResponseWriter) LoggingResponseWriter {
+	if _, ok := w.(LoggingResponseWriter); ok {
+		return w.(LoggingResponseWriter)
 	}
 
 	context := log.WithFields(logrus.Fields{
 		"transaction": uuid.NewV4(),
 	})
-	var logger loggingResponseWriter = &responseLogger{w: w, Context: context}
+	var logger LoggingResponseWriter = &responseLogger{w: w, Context: context}
 	if _, ok := w.(http.Hijacker); ok {
 		logger = &hijackLogger{responseLogger{w: w}}
 	}
@@ -57,7 +57,7 @@ func MakeLogger(w http.ResponseWriter) loggingResponseWriter {
 	return logger
 }
 
-type loggingResponseWriter interface {
+type LoggingResponseWriter interface {
 	http.ResponseWriter
 	http.Flusher
 	Status() int
@@ -135,12 +135,12 @@ func (l *hijackLogger) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 }
 
 type closeNotifyWriter struct {
-	loggingResponseWriter
+	LoggingResponseWriter
 	http.CloseNotifier
 }
 
 type hijackCloseNotifier struct {
-	loggingResponseWriter
+	LoggingResponseWriter
 	http.Hijacker
 	http.CloseNotifier
 }

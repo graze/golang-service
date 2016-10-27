@@ -30,7 +30,7 @@ func (h structuredHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 // writeLog writes a log entry to structuredHandler's logger
-func (h structuredHandler) writeLog(w loggingResponseWriter, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
+func (h structuredHandler) writeLog(w LoggingResponseWriter, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
 	writeStructuredLog(w, h.logger, req, url, ts, dur, status, size)
 }
 
@@ -38,7 +38,7 @@ func (h structuredHandler) writeLog(w loggingResponseWriter, req *http.Request, 
 // ts is the timestamp with wich the entry should be logged
 // dur is the time taken by the server to generate the response
 // status and size are used to provide response HTTP status and size
-func writeStructuredLog(w loggingResponseWriter, logger log.LogContext, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
+func writeStructuredLog(w LoggingResponseWriter, logger log.LogContext, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
 	sDur := float64(dur.Nanoseconds()) / (float64(time.Second) / float64(time.Nanosecond))
 	uri := parseUri(req, url)
 

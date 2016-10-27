@@ -31,7 +31,7 @@ func (h statsdHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 // writeLog writes the log do the statsd client from a statsdHandler
-func (h statsdHandler) writeLog(w loggingResponseWriter, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
+func (h statsdHandler) writeLog(w LoggingResponseWriter, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
 	writeStatsdLog(h.statsd, req, url, ts, dur, status, size)
 }
 

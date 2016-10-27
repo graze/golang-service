@@ -103,10 +103,10 @@ func TestContextUpdatesTheRequestContext(t *testing.T) {
 	}
 
 	for k, tc := range cases {
-		var logger loggingResponseWriter = nil
+		var logger LoggingResponseWriter = nil
 		beforeHandler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			if _, ok := w.(loggingResponseWriter); ok {
-				logger = w.(loggingResponseWriter)
+			if _, ok := w.(LoggingResponseWriter); ok {
+				logger = w.(LoggingResponseWriter)
 				if _, ok := logger.GetContext().(*logrus.Entry); ok {
 					entry := logger.GetContext().(*logrus.Entry)
 					for f, v := range tc.before {
@@ -117,7 +117,7 @@ func TestContextUpdatesTheRequestContext(t *testing.T) {
 					t.Error("returned context does not implement logrus.Entry so unable to retrieve data")
 				}
 			} else {
-				t.Error("http.ResponseWriter should implement loggingResponseWriter")
+				t.Error("http.ResponseWriter should implement LoggingResponseWriter")
 			}
 			w.Write([]byte("ok\n"))
 		})
