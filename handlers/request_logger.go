@@ -42,15 +42,19 @@ func MakeLogger(w http.ResponseWriter, context log.LogContext) LoggingResponseWr
 	context.WithFields(logrus.Fields{
 		"tag": "logging_middleware_creation",
 	}).Info("Creating logging middleware")
+	logContext := context.WithFields(logrus.Fields{
+		"transaction": uuid.NewV4(),
+	})
 
 	var logger LoggingResponseWriter = &responseLogger{
-		w: w,
-		Context: context.WithFields(logrus.Fields{
-			"transaction": uuid.NewV4(),
-		}),
+		w:       w,
+		Context: logContext,
 	}
 	if _, ok := w.(http.Hijacker); ok {
-		logger = &hijackLogger{responseLogger{w: w}}
+		logger = &hijackLogger{responseLogger{
+			w:       w,
+			Context: logContext,
+		}}
 	}
 	h, ok1 := logger.(http.Hijacker)
 	c, ok2 := w.(http.CloseNotifier)
