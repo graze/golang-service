@@ -79,9 +79,7 @@ type responseLogger struct {
 
 // AddContext appends items to the current logging context for this http request
 func (l *responseLogger) AddContext(fields logrus.Fields) {
-	for k, v := range fields {
-		l.Context.Data[k] = v
-	}
+	l.Context = l.Context.WithFields(fields)
 }
 
 // GetContext gets the current logging context for this http request
