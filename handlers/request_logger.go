@@ -24,7 +24,7 @@ import (
 
 func LogServeHTTP(w http.ResponseWriter, req *http.Request, handler http.Handler, caller func(w LoggingResponseWriter, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int)) {
 	t := time.Now().UTC()
-	logger := MakeLogger(w)
+	logger := MakeLogger(w, log.WithFields(logrus.Fields{}))
 	url := *req.URL
 	handler.ServeHTTP(logger, req)
 	dur := time.Now().UTC().Sub(t)
@@ -34,15 +34,17 @@ func LogServeHTTP(w http.ResponseWriter, req *http.Request, handler http.Handler
 // MakeLogger creates a LoggingResponseWriter from a http.ResponseWriter
 //
 // The loggingResponsWriter adds status field and the size of the response to the LoggingResponseWriter
-func MakeLogger(w http.ResponseWriter) LoggingResponseWriter {
+func MakeLogger(w http.ResponseWriter, context log.LogContext) LoggingResponseWriter {
 	if _, ok := w.(LoggingResponseWriter); ok {
 		return w.(LoggingResponseWriter)
 	}
 
-	context := log.WithFields(logrus.Fields{
-		"transaction": uuid.NewV4(),
-	})
-	var logger LoggingResponseWriter = &responseLogger{w: w, Context: context}
+	var logger LoggingResponseWriter = &responseLogger{
+		w: w,
+		Context: context.WithFields(logrus.Fields{
+			"transaction": uuid.NewV4(),
+		}),
+	}
 	if _, ok := w.(http.Hijacker); ok {
 		logger = &hijackLogger{responseLogger{w: w}}
 	}

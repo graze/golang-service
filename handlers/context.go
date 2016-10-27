@@ -15,16 +15,18 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	log "github.com/graze/golang-service/logging"
 )
 
 type logContextHandler struct {
+	logger  log.LogContext
 	handler http.Handler
 }
 
 // ServeHTTP does the actual handling of HTTP requests by wrapping the request in a logger
 func (h logContextHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	t := time.Now().UTC()
-	logger := MakeLogger(w)
+	logger := MakeLogger(w, h.logger)
 	url := *req.URL
 	logger.AddContext(logrus.Fields{
 		"http.method":   req.Method,
@@ -43,9 +45,12 @@ func (h logContextHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	})
 }
 
-// StructuredHandler returns an opinionated structuredHandler using the standard logger
-// and setting a context with the fields:
-// 	component = request.handler
+// LogContextHandler returns a handler that adds `http` and `transaction` items into a common logging context
 func LogContextHandler(h http.Handler) http.Handler {
-	return logContextHandler{h}
+	return logContextHandler{log.New(), h}
+}
+
+// LogContextHandler returns a handler that adds `http` and `transaction` items into the provided logging context
+func LoggingContextHandler(logger log.LogContext, h http.Handler) http.Handler {
+	return logContextHandler{logger, h}
 }
