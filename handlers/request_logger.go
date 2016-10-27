@@ -39,6 +39,10 @@ func MakeLogger(w http.ResponseWriter, context log.LogContext) LoggingResponseWr
 		return w.(LoggingResponseWriter)
 	}
 
+	context.WithFields(logrus.Fields{
+		"tag": "logging_middleware_creation",
+	}).Info("Creating logging middleware")
+
 	var logger LoggingResponseWriter = &responseLogger{
 		w: w,
 		Context: context.WithFields(logrus.Fields{
