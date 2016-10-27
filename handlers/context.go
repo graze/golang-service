@@ -31,6 +31,7 @@ func (h logContextHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	url := *req.URL
 	fmt.Printf("logger: %s", logger.GetContext())
 	logger.GetContext().Info("test")
+	h.logger.Info("test2")
 	logger.AddContext(logrus.Fields{
 		"http.method":   req.Method,
 		"http.protocol": req.Proto,
