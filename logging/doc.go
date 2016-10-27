@@ -11,9 +11,44 @@
 /*
 Package logging provides a collection of logging helpers that use environment variable to set themselves up
 
+Logging Context
+
+Handle global logging with context. Based on [logrus](https://github.com/Sirupsen/logrus)
+with an option to create a global context
+
+    package (
+        log "github.com/graze/golang-service/logging"
+        "github.com/Sirupsen/logrus"
+    )
+
+    // set global properties
+    log.SetFormatter(&logrus.TextFormatter()) // default
+    log.SetOutput(os.Stderr) // default
+    log.SetLevel(logrus.InfoLevel) // default
+    log.SetFields(log.F{"service":"super_service"}) // apply `service=super_service` to each log message
+
+    // log using global logger
+    log.With(log.F{
+        "module": "request_handler",
+        "tag":    "received_request"
+        "method": "GET",
+        "path":   "/path"
+    }).Info("Received request");
+
+    // log using context logger
+    log_context := log.With(log.F{
+        "module": "request_handler"
+    })
+    log_context.With(log.F{
+        "tag":    "received_request",
+        "method": "GET",
+        "path":   "/path"
+    }).Info("Recieved GET /path")
+    log_context.WithError(err).Error("Failed to handle input request")
+
 Statsd
 
-Log request duration to a statsd host
+Connect to a statsd endpoint using environment variables
 
 Environment Variables:
     STATSD_HOST: The host of the statsd server

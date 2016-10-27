@@ -14,38 +14,40 @@ import (
 	"os"
 	"testing"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/Sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestLogfmtInit(t *testing.T) {
+func TestLogging(t *testing.T) {
 	logger, hook := test.NewNullLogger()
 
 	logger.Info("message")
 	assert.Equal(t, 1, len(hook.Entries))
 	assert.Equal(t, "message", hook.LastEntry().Message)
-	assert.Equal(t, log.InfoLevel, hook.LastEntry().Level)
+	assert.Equal(t, logrus.InfoLevel, hook.LastEntry().Level)
 
 	hook.Reset()
 
-	logger.WithFields(log.Fields{
+	logger.WithFields(logrus.Fields{
 		"variable": 2,
 	}).Error("some text")
 	assert.Equal(t, 1, len(hook.Entries))
 	assert.Equal(t, "some text", hook.LastEntry().Message)
-	assert.Equal(t, log.ErrorLevel, hook.LastEntry().Level)
+	assert.Equal(t, ErrorLevel, hook.LastEntry().Level)
 	assert.Equal(t, 2, hook.LastEntry().Data["variable"])
 }
 
-func TestGetLogger(t *testing.T) {
-	os.Setenv("LOG_APPLICATION", "test")
+func TestEnvironment(t *testing.T) {
+	os.Setenv("LOG_APPLICATION", "some_app")
+	os.Setenv("ENVIRONMENT", "test")
 
-	logger := GetLogger()
+	logger := New()
 	hook := test.NewLocal(logger.Logger)
 
 	logger.Info("some text")
 	assert.Equal(t, 1, len(hook.Entries))
 	assert.Equal(t, "some text", hook.LastEntry().Message)
-	assert.Equal(t, "test", hook.LastEntry().Data["application"])
+	assert.Equal(t, "some_app", hook.LastEntry().Data["app"])
+	assert.Equal(t, "test", hook.LastEntry().Data["env"])
 }

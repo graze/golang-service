@@ -11,17 +11,16 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
-	"github.com/graze/golang-service/logging"
+	"github.com/Sirupsen/logrus"
+	log "github.com/graze/golang-service/logging"
 )
 
 type structuredHandler struct {
-	logger  log.FieldLogger
+	logger  log.LogContext
 	handler http.Handler
 }
 
@@ -31,32 +30,32 @@ func (h structuredHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 // writeLog writes a log entry to structuredHandler's logger
-func (h structuredHandler) writeLog(req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
-	writeStructuredLog(h.logger, req, url, ts, dur, status, size)
+func (h structuredHandler) writeLog(w loggingResponseWriter, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
+	writeStructuredLog(w, h.logger, req, url, ts, dur, status, size)
 }
 
 // writeStructuredLog writes a log entry for req to logger in a structured format for json/logfmt
 // ts is the timestamp with wich the entry should be logged
 // dur is the time taken by the server to generate the response
 // status and size are used to provide response HTTP status and size
-func writeStructuredLog(logger log.FieldLogger, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
+func writeStructuredLog(w loggingResponseWriter, logger log.LogContext, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
 	sDur := float64(dur.Nanoseconds()) / (float64(time.Second) / float64(time.Nanosecond))
 	uri := parseUri(req, url)
 
-	logger.WithFields(log.Fields{
-		"tag":      "request_handled",
-		"method":   req.Method,
-		"protocol": req.Proto,
-		"uri":      uri,
-		"path":     uriPath(req, url),
-		"host":     req.Host,
-		"status":   status,
-		"bytes":    size,
-		"dur":      sDur,
-		"ts":       ts.Format(time.RFC3339Nano),
-		"ref":      req.Referer(),
-		"user":     req.Header.Get("X-Forwarded-For"),
-	}).Info(fmt.Sprintf("%s %s %s", req.Method, uri, req.Proto))
+	logger.WithFields(logrus.Fields{
+		"tag":           "request_handled",
+		"http.method":   req.Method,
+		"http.protocol": req.Proto,
+		"http.uri":      uri,
+		"http.path":     uriPath(req, url),
+		"http.host":     req.Host,
+		"http.status":   status,
+		"http.bytes":    size,
+		"dur":           sDur,
+		"ts":            ts.Format(time.RFC3339Nano),
+		"http.ref":      req.Referer(),
+		"http.user":     req.Header.Get("X-Forwarded-For"),
+	}).Infof("%s %s %s", req.Method, uri, req.Proto)
 }
 
 // StructuredHandler return a http.Handler that wraps h and logs request to out in
@@ -68,13 +67,13 @@ func writeStructuredLog(logger log.FieldLogger, req *http.Request, url url.URL, 
 //  r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 //  	w.Write([]byte("This is a catch-all route"))
 //  })
-//  context := log.New().WithFields(log.Fields{
+//  context := log.With(log.F{
 //	  "application": "service"
 //	})
 //  loggedRouter := logging.StructuredHandler(context, r)
 //  http.ListenAndServe(":1123", loggedRouter)
 //
-func StructuredLogHandler(logger log.FieldLogger, h http.Handler) http.Handler {
+func StructuredLogHandler(logger log.LogContext, h http.Handler) http.Handler {
 	return structuredHandler{logger, h}
 }
 
@@ -82,8 +81,8 @@ func StructuredLogHandler(logger log.FieldLogger, h http.Handler) http.Handler {
 // and setting a context with the fields:
 // 	component = request.handler
 func StructuredHandler(h http.Handler) http.Handler {
-	context := logging.GetLogger().WithFields(log.Fields{
-		"component": "request.handler",
+	context := log.WithFields(logrus.Fields{
+		"module": "request.handler",
 	})
 	return structuredHandler{context, h}
 }

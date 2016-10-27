@@ -31,32 +31,8 @@ func (h statsdHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 // writeLog writes the log do the statsd client from a statsdHandler
-func (h statsdHandler) writeLog(req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
+func (h statsdHandler) writeLog(w loggingResponseWriter, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
 	writeStatsdLog(h.statsd, req, url, ts, dur, status, size)
-}
-
-// uriPath extracts the path from a request uri
-func uriPath(req *http.Request, url url.URL) (uri string) {
-	uri = url.EscapedPath()
-
-	// Requests using the CONNECT method over HTTP/2.0 must use
-	// the authority field (aka r.Host) to identify the target.
-	// Refer: https://httpwg.github.io/specs/rfc7540.html#CONNECT
-	if req.ProtoMajor == 2 && req.Method == "CONNECT" {
-		uri = req.Host
-	}
-	if uri == "" {
-		parsed, err := url.Parse(req.RequestURI)
-		if err != nil {
-			uri = "unknown"
-		} else {
-			uri = parsed.EscapedPath()
-		}
-	}
-	if uri == "" {
-		uri = "/"
-	}
-	return
 }
 
 // writeStatsdLog send the response time and a counter for each request to statsd

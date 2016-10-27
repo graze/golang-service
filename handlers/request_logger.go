@@ -16,15 +16,19 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/Sirupsen/logrus"
+	log "github.com/graze/golang-service/logging"
+	"github.com/twinj/uuid"
 )
 
-func LogServeHTTP(w http.ResponseWriter, req *http.Request, handler http.Handler, caller func(req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int)) {
+func LogServeHTTP(w http.ResponseWriter, req *http.Request, handler http.Handler, caller func(w loggingResponseWriter, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int)) {
 	t := time.Now().UTC()
 	logger := MakeLogger(w)
 	url := *req.URL
 	handler.ServeHTTP(logger, req)
 	dur := time.Now().UTC().Sub(t)
-	caller(req, url, t, dur, logger.Status(), logger.Size())
+	caller(logger, req, url, t, dur, logger.Status(), logger.Size())
 }
 
 // MakeLogger creates a loggingResponseWriter from a http.ResponseWriter
@@ -35,7 +39,10 @@ func MakeLogger(w http.ResponseWriter) loggingResponseWriter {
 		return w.(loggingResponseWriter)
 	}
 
-	var logger loggingResponseWriter = &responseLogger{w: w}
+	context := log.WithFields(logrus.Fields{
+		"transaction": uuid.NewV4(),
+	})
+	var logger loggingResponseWriter = &responseLogger{w: w, Context: context}
 	if _, ok := w.(http.Hijacker); ok {
 		logger = &hijackLogger{responseLogger{w: w}}
 	}
@@ -55,14 +62,27 @@ type loggingResponseWriter interface {
 	http.Flusher
 	Status() int
 	Size() int
+	AddContext(fields logrus.Fields)
+	GetContext() log.LogContext
 }
 
 // responseLogger is wrapper of http.ResponseWriter that keeps track of its HTTP
 // status code and body size
 type responseLogger struct {
-	w      http.ResponseWriter
-	status int
-	size   int
+	w       http.ResponseWriter
+	Context *logrus.Entry
+	status  int
+	size    int
+}
+
+// AddContext appends items to the current logging context for this http request
+func (l *responseLogger) AddContext(fields logrus.Fields) {
+	l.Context = l.Context.WithFields(fields)
+}
+
+// GetContext gets the current logging context for this http request
+func (l *responseLogger) GetContext() log.LogContext {
+	return l.Context
 }
 
 func (l *responseLogger) Header() http.Header {
@@ -123,4 +143,44 @@ type hijackCloseNotifier struct {
 	loggingResponseWriter
 	http.Hijacker
 	http.CloseNotifier
+}
+
+// parseUri takes a request and url and returns a RFC7540 compliant uri
+func parseUri(req *http.Request, url url.URL) (uri string) {
+	uri = req.RequestURI
+
+	// Requests using the CONNECT method over HTTP/2.0 must use
+	// the authority field (aka r.Host) to identify the target.
+	// Refer: https://httpwg.github.io/specs/rfc7540.html#CONNECT
+	if req.ProtoMajor == 2 && req.Method == "CONNECT" {
+		uri = req.Host
+	}
+	if uri == "" {
+		uri = url.RequestURI()
+	}
+	return
+}
+
+// uriPath extracts the path from a request uri
+func uriPath(req *http.Request, url url.URL) (uri string) {
+	uri = url.EscapedPath()
+
+	// Requests using the CONNECT method over HTTP/2.0 must use
+	// the authority field (aka r.Host) to identify the target.
+	// Refer: https://httpwg.github.io/specs/rfc7540.html#CONNECT
+	if req.ProtoMajor == 2 && req.Method == "CONNECT" {
+		uri = req.Host
+	}
+	if uri == "" {
+		parsed, err := url.Parse(req.RequestURI)
+		if err != nil {
+			uri = "unknown"
+		} else {
+			uri = parsed.EscapedPath()
+		}
+	}
+	if uri == "" {
+		uri = "/"
+	}
+	return
 }
