@@ -92,6 +92,9 @@ func (l *responseLogger) AddContext(fields logrus.Fields) {
 
 // GetContext gets the current logging context for this http request
 func (l *responseLogger) GetContext() *logrus.Entry {
+	if l.Context == nil {
+		panic("responseLogger Context is nil")
+	}
 	return l.Context
 }
 
