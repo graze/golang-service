@@ -52,5 +52,5 @@ func LogContextHandler(h http.Handler) http.Handler {
 
 // LogContextHandler returns a handler that adds `http` and `transaction` items into the provided logging context
 func LoggingContextHandler(logger log.LogContext, h http.Handler) http.Handler {
-	return logContextHandler{logger, h}
+	return logContextHandler{logger.WithFields(logrus.Fields{}), h}
 }
