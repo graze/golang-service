@@ -69,7 +69,7 @@ type LoggingResponseWriter interface {
 	Status() int
 	Size() int
 	AddContext(fields logrus.Fields)
-	GetContext() log.LogContext
+	GetContext() *logrus.Entry
 }
 
 // responseLogger is wrapper of http.ResponseWriter that keeps track of its HTTP
@@ -87,7 +87,7 @@ func (l *responseLogger) AddContext(fields logrus.Fields) {
 }
 
 // GetContext gets the current logging context for this http request
-func (l *responseLogger) GetContext() log.LogContext {
+func (l *responseLogger) GetContext() *logrus.Entry {
 	return l.Context
 }
 

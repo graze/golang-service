@@ -16,7 +16,6 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -102,19 +101,17 @@ func TestContextUpdatesTheRequestContext(t *testing.T) {
 		},
 	}
 
+	rec := httptest.NewRecorder()
+
 	for k, tc := range cases {
 		var logger LoggingResponseWriter = nil
 		beforeHandler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			if _, ok := w.(LoggingResponseWriter); ok {
 				logger = w.(LoggingResponseWriter)
-				if _, ok := logger.GetContext().(*logrus.Entry); ok {
-					entry := logger.GetContext().(*logrus.Entry)
-					for f, v := range tc.before {
-						assert.Contains(t, entry.Data, f, "test %s - Has Field: %s", k, f)
-						assert.Equal(t, v, entry.Data[f], "test %s - Field: %s", k, f)
-					}
-				} else {
-					t.Error("returned context does not implement logrus.Entry so unable to retrieve data")
+				entry := logger.GetContext()
+				for f, v := range tc.before {
+					assert.Contains(t, entry.Data, f, "test %s - Has Field: %s", k, f)
+					assert.Equal(t, v, entry.Data[f], "test %s - Field: %s", k, f)
 				}
 			} else {
 				t.Error("http.ResponseWriter should implement LoggingResponseWriter")
@@ -123,16 +120,11 @@ func TestContextUpdatesTheRequestContext(t *testing.T) {
 		})
 
 		handler := LogContextHandler(beforeHandler)
-		rec := httptest.NewRecorder()
 		handler.ServeHTTP(rec, tc.request)
-		if _, ok := logger.GetContext().(*logrus.Entry); ok {
-			entry := logger.GetContext().(*logrus.Entry)
-			for f, v := range tc.after {
-				assert.Contains(t, entry.Data, f, "test %s - Has Field: %s", k, f)
-				assert.Regexp(t, v, entry.Data[f], "test %s - Field: %s", k, f)
-			}
-		} else {
-			t.Error("returned context does not implement logrus.Entry so unable to retrieve data")
+		entry := logger.GetContext()
+		for f, v := range tc.after {
+			assert.Contains(t, entry.Data, f, "test %s - Has Field: %s", k, f)
+			assert.Regexp(t, v, entry.Data[f], "test %s - Field: %s", k, f)
 		}
 	}
 }
