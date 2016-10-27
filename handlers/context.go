@@ -11,6 +11,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -28,6 +29,8 @@ func (h logContextHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	t := time.Now().UTC()
 	logger := MakeLogger(w, h.logger)
 	url := *req.URL
+	fmt.Printf("logger: %s", logger.GetContext())
+	logger.GetContext().Info("test")
 	logger.AddContext(logrus.Fields{
 		"http.method":   req.Method,
 		"http.protocol": req.Proto,
