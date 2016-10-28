@@ -9,7 +9,7 @@ import (
 
 func TestNewContext(t *testing.T) {
 	context := New()
-	context.Add(F{"test": "test2"})
+	assert.Exactly(t, context, context.Add(F{"test": "test2"}))
 	hook := test.NewLocal(context.Logger)
 
 	context.Info("test")
@@ -23,4 +23,5 @@ func TestNewContext(t *testing.T) {
 	assert.Equal(t, "error", hook.LastEntry().Message)
 	assert.Equal(t, ErrorLevel, hook.LastEntry().Level)
 	assert.Equal(t, 3, hook.LastEntry().Data["2"])
+	assert.Equal(t, "test2", hook.LastEntry().Data["test"])
 }

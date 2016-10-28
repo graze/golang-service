@@ -28,7 +28,7 @@ type F logrus.Fields
 type LogContext interface {
 	With(fields F) *Context
 	Err(err error) *Context
-	Add(fields F)
+	Add(fields F) *Context
 
 	Debugf(format string, args ...interface{})
 	Infof(format string, args ...interface{})
@@ -63,10 +63,11 @@ func (c *Context) Err(err error) *Context {
 }
 
 // Add will add the fields specified to the current context for future use
-func (c *Context) Add(fields F) {
+func (c *Context) Add(fields F) *Context {
 	for k, v := range fields {
 		c.Entry.Data[k] = v
 	}
+	return c
 }
 
 // Create a new Context
