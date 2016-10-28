@@ -16,7 +16,7 @@ import (
 	"net/url"
 	"testing"
 
-	log "github.com/graze/golang-service/logging"
+	log "github.com/graze/golang-service/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,9 +24,9 @@ func TestContextUpdatesTheRequestContext(t *testing.T) {
 	t.Parallel()
 
 	cases := map[string]struct {
-		request *http.Request
-		before  map[string]interface{}
-		after   map[string]string
+		request  *http.Request
+		expected map[string]interface{}
+		regex    map[string]string
 	}{
 		"basic": {
 			newRequest("GET", "http://example.com"),
@@ -38,9 +38,6 @@ func TestContextUpdatesTheRequestContext(t *testing.T) {
 				"http.host":     "example.com",
 			},
 			map[string]string{
-				"http.status": "200",
-				"http.bytes":  `\d+`,
-				"http.dur":    `[0-9\.]+`,
 				"transaction": `(?:[0-9a-z]+-){4}[0-9a-z]+`,
 			},
 		},
@@ -54,9 +51,6 @@ func TestContextUpdatesTheRequestContext(t *testing.T) {
 				"http.host":     "example.com",
 			},
 			map[string]string{
-				"http.status": "200",
-				"http.bytes":  `\d+`,
-				"http.dur":    `[0-9\.]+`,
 				"transaction": `(?:[0-9a-z]+-){4}[0-9a-z]+`,
 			},
 		},
@@ -70,9 +64,6 @@ func TestContextUpdatesTheRequestContext(t *testing.T) {
 				"http.host":     "example.com",
 			},
 			map[string]string{
-				"http.status": "200",
-				"http.bytes":  `\d+`,
-				"http.dur":    `[0-9\.]+`,
 				"transaction": `(?:[0-9a-z]+-){4}[0-9a-z]+`,
 			},
 		},
@@ -94,9 +85,6 @@ func TestContextUpdatesTheRequestContext(t *testing.T) {
 				"http.host":     "www.example.com:443",
 			},
 			map[string]string{
-				"http.status": "200",
-				"http.bytes":  `\d+`,
-				"http.dur":    `[0-9\.]+`,
 				"transaction": `(?:[0-9a-z]+-){4}[0-9a-z]+`,
 			},
 		},
@@ -105,15 +93,17 @@ func TestContextUpdatesTheRequestContext(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	for k, tc := range cases {
-		var logger LoggingResponseWriter = nil
 		beforeHandler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			if _, ok := w.(LoggingResponseWriter); ok {
-				logger = w.(LoggingResponseWriter)
+			if logger, ok := w.(LoggingResponseWriter); ok {
 				context := logger.GetContext()
 				if entry, ok := context.(*log.Context); ok {
-					for f, v := range tc.before {
+					for f, v := range tc.expected {
 						assert.Contains(t, entry.Data, f, "test %s - Has Field: %s", k, f)
 						assert.Equal(t, v, entry.Data[f], "test %s - Field: %s", k, f)
+					}
+					for f, v := range tc.regex {
+						assert.Contains(t, entry.Data, f, "test %s - Has Field: %s", k, f)
+						assert.Regexp(t, v, entry.Data[f], "test %s - Field: %s", k, f)
 					}
 				} else {
 					t.Error("logger.GetContext() should implement (*log.Context)")
@@ -126,12 +116,5 @@ func TestContextUpdatesTheRequestContext(t *testing.T) {
 
 		handler := LogContextHandler(beforeHandler)
 		handler.ServeHTTP(rec, tc.request)
-		context := logger.GetContext()
-		if entry, ok := context.(*log.Context); ok {
-			for f, v := range tc.after {
-				assert.Contains(t, entry.Data, f, "test %s - Has Field: %s", k, f)
-				assert.Regexp(t, v, entry.Data[f], "test %s - Field: %s", k, f)
-			}
-		}
 	}
 }

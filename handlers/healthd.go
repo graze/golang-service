@@ -55,7 +55,7 @@ func writeHealthdLog(w io.Writer, req *http.Request, url url.URL, ts time.Time, 
 	io.WriteString(w, str)
 }
 
-// HealthdHandler return a http.Handler that wraps h and logs request to out in
+// HealthdIoHandler return a http.Handler that wraps h and logs request to out in
 // nginx Healthd format
 //
 // see http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/health-enhanced-serverlogs.html
@@ -66,9 +66,8 @@ func writeHealthdLog(w io.Writer, req *http.Request, url url.URL, ts time.Time, 
 //  r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 //  	w.Write([]byte("This is a catch-all route"))
 //  })
-//  loggedRouter := logging.HealthdHandler(os.Stdout, r)
+//  loggedRouter := handlers.HealthdIoHandler(os.Stdout, r)
 //  http.ListenAndServe(":1123", loggedRouter)
-//
 func HealthdIoHandler(out io.Writer, h http.Handler) http.Handler {
 	return healthdHandler{out, h}
 }
@@ -96,7 +95,20 @@ func (h healthdFileHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 	h.base.ServeHTTP(w, req)
 }
 
-// healthdHandler returns a logging.HealthdHandler and outputs healthd formatted log files to the appropriate path
+// HealthdHandler return a http.Handler that wraps h and logs request to out in
+// nginx Healthd format to /var/log/nginx/healthd/application.log.<year>-<month>-<day>-<hour>
+//
+// see http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/health-enhanced-serverlogs.html
+//
+// Example:
+//
+//  r := mux.NewRouter()
+//  r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+//  	w.Write([]byte("This is a catch-all route"))
+//  })
+//  loggedRouter := handlers.HealthdHandler(r)
+//  http.ListenAndServe(":1123", loggedRouter)
+//
 func HealthdHandler(h http.Handler) http.Handler {
 	path := "/var/log/nginx/healthd/"
 	err := os.MkdirAll(path, 0666)

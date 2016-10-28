@@ -27,6 +27,12 @@ Usage:
 They can also be manually chained together
     loggedRouter := handlers.StatsdHandler(handlers.HealthdHandler(r))
 
+Logging Context
+
+This creates a logging context to be passed into the handling function with information about the request
+
+Usage:
+
 Healthd
 
 This provides healthd logging (http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/health-enhanced-serverlogs.html)
@@ -71,10 +77,14 @@ Log requests using a structured format for handling with json/logfmt
 Usage:
     r := mux.NewRouter()
     r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-        w.Write([]byte("This is a catch-all route"))
+    	w.Write([]byte("This is a catch-all route"))
     })
-    logger := log.NewLogfmtLogger(os.Stdout)
-    loggedRouter := logging.StructuredHandler(log.NewContext(log).With("component", "handler"), r)
+    loggedRouter := handlers.StructuredLogHandler(
+        log.With(log.F{"module":"request.handler"}),
+        r)
     http.ListenAndServe(":1123", loggedRouter)
+
+Default Output:
+    time="2016-10-28T10:51:32Z" level=info msg="GET / HTTP/1.1" dur=0.003200881 http.bytes=80 http.host="localhost:1123" http.method=GET http.path="/" http.protocol="HTTP/1.1" http.ref= http.status=200 http.uri="/" http.user= module=request.handler tag="request_handled" ts="2016-10-28T10:51:31.542424381Z"
 */
 package handlers

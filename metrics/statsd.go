@@ -8,7 +8,7 @@
 // license: https://github.com/graze/golang-service/blob/master/LICENSE
 // link:    https://github.com/graze/golang-service
 
-package logging
+package metrics
 
 import (
 	"fmt"

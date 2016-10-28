@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"github.com/DataDog/datadog-go/statsd"
-	"github.com/graze/golang-service/logging"
+	"github.com/graze/golang-service/metrics"
 )
 
 type statsdHandler struct {
@@ -61,16 +61,24 @@ func writeStatsdLog(w *statsd.Client, req *http.Request, url url.URL, ts time.Ti
 //  	w.Write([]byte("This is a catch-all route"))
 //  })
 //  c, err := statsd.New("127.0.0.1:8125")
-//  loggedRouter := logging.StatsdHandler(c, r)
+//  loggedRouter := handlers.StatsdHandler(c, r)
 //  http.ListenAndServe(":1123", loggedRouter)
 //
 func StatsdIoHandler(out *statsd.Client, h http.Handler) http.Handler {
 	return statsdHandler{out, h}
 }
 
-// statsdHandler returns a logging.StatsdHandler to write request and response informtion to statsd
+// statsdHandler returns a handlers.StatsdHandler to write request and response informtion to statsd
+//
+// Usage:
+// 	r := mux.NewRouter()
+// 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+// 	   w.Write([]byte("This is a catch-all route"))
+// 	})
+// 	loggedRouter := handlers.StatsdHandler(r)
+// 	http.ListenAndServe(":1123", loggedRouter)
 func StatsdHandler(h http.Handler) http.Handler {
-	client, err := logging.GetStatsdFromEnv()
+	client, err := metrics.GetStatsdFromEnv()
 	if err != nil {
 		panic(err)
 	}

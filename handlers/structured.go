@@ -15,7 +15,7 @@ import (
 	"net/url"
 	"time"
 
-	log "github.com/graze/golang-service/logging"
+	"github.com/graze/golang-service/log"
 )
 
 type structuredHandler struct {
@@ -68,12 +68,13 @@ func writeStructuredLog(w LoggingResponseWriter, context log.LogContext, req *ht
 //  r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 //  	w.Write([]byte("This is a catch-all route"))
 //  })
-//  context := log.With(log.F{
-//	  "application": "service"
-//	})
-//  loggedRouter := logging.StructuredHandler(context, r)
+//  context := log.New()
+//	context.SetFormatter(&logrus.JSONFormatter{})
+//	context.Add(log.F{"module":"request.handler"})
+//  loggedRouter := handlers.StructuredLogHandler(
+//		log.With(log.F{"module":"request.handler"})
+//		, r)
 //  http.ListenAndServe(":1123", loggedRouter)
-//
 func StructuredLogHandler(context log.LogContext, h http.Handler) http.Handler {
 	return structuredHandler{context, h}
 }
@@ -81,6 +82,15 @@ func StructuredLogHandler(context log.LogContext, h http.Handler) http.Handler {
 // StructuredHandler returns an opinionated structuredHandler using the standard logger
 // and setting a context with the fields:
 // 	component = request.handler
+//
+// Usage:
+//  r := mux.NewRouter()
+//  r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+//  	w.Write([]byte("This is a catch-all route"))
+//  })
+//  loggedRouter := handlers.StructuredHandler(r)
+//  http.ListenAndServe(":1123", loggedRouter)
+//
 func StructuredHandler(h http.Handler) http.Handler {
 	context := log.With(log.F{
 		"module": "request.handler",

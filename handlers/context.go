@@ -12,9 +12,8 @@ package handlers
 
 import (
 	"net/http"
-	"time"
 
-	log "github.com/graze/golang-service/logging"
+	log "github.com/graze/golang-service/log"
 )
 
 type logContextHandler struct {
@@ -24,7 +23,6 @@ type logContextHandler struct {
 
 // ServeHTTP does the actual handling of HTTP requests by wrapping the request in a logger
 func (h logContextHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	t := time.Now().UTC()
 	logger := MakeLogger(w, h.logger)
 	url := *req.URL
 	context := logger.GetContext()
@@ -36,16 +34,17 @@ func (h logContextHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		"http.host":     req.Host,
 	})
 	h.handler.ServeHTTP(logger, req)
-	dur := time.Now().UTC().Sub(t)
-	sDur := float64(dur.Nanoseconds()) / (float64(time.Second) / float64(time.Nanosecond))
-	context.Add(log.F{
-		"http.status": logger.Status(),
-		"http.bytes":  logger.Size(),
-		"http.dur":    sDur,
-	})
 }
 
 // LogContextHandler returns a handler that adds `http` and `transaction` items into a common logging context
+//
+// It adds the following fields to the `LoggingResponseWriter` log context:
+//  http.method     - GET/POST/...
+//  http.protocol   - HTTP/1.1
+//  http.uri        - /path?with=query
+//  http.path       - /path
+//  http.host       - localhost:80
+//  transaction     - unique uuid4 for this request
 func LogContextHandler(h http.Handler) http.Handler {
 	return logContextHandler{log.New(), h}
 }

@@ -17,7 +17,7 @@ import (
 	"net/url"
 	"time"
 
-	log "github.com/graze/golang-service/logging"
+	log "github.com/graze/golang-service/log"
 	"github.com/twinj/uuid"
 )
 

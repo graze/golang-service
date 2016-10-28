@@ -13,7 +13,9 @@ golang-service is a set of packages to help with creating services using golang 
 
 golang-service contains the following packages:
 
-The logging package provides some logging helpers for statsd, logfmt and syslog
+The log package provides some logging helpers for structured contextual logs
+
+The metrics package prodives helpers for statsd
 
 The handlers package provides a set of handlers that handle http.Request log the results
 
@@ -23,6 +25,7 @@ package golangservice
 
 import (
 	_ "github.com/graze/golang-service/handlers"
-	_ "github.com/graze/golang-service/logging"
+	_ "github.com/graze/golang-service/log"
+	_ "github.com/graze/golang-service/metrics"
 	_ "github.com/graze/golang-service/nettest"
 )

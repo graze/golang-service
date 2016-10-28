@@ -8,7 +8,7 @@
 // license: https://github.com/graze/golang-service/blob/master/LICENSE
 // link:    https://github.com/graze/golang-service
 
-package logging
+package log
 
 import (
 	"io"
@@ -39,44 +39,49 @@ const (
 
 // SetOutput sets the standard logger output.
 func SetOutput(out io.Writer) {
-	logrus.SetOutput(out)
+	logContext.SetOutput(out)
 }
 
 // SetFormatter sets the standard logger formatter.
 func SetFormatter(formatter logrus.Formatter) {
-	logrus.SetFormatter(formatter)
+	logContext.SetFormatter(formatter)
 }
 
 // SetLevel sets the standard logger level.
 func SetLevel(level logrus.Level) {
-	logrus.SetLevel(level)
+	logContext.SetLevel(level)
 }
 
 // GetLevel returns the standard logger level.
 func GetLevel() logrus.Level {
-	return logrus.GetLevel()
+	return logContext.GetLevel()
 }
 
-// AddHook adds a hook to the standard logger hooks.
+// AddHook adds a new hook to the global logging context
 func AddHook(hook logrus.Hook) {
-	logrus.AddHook(hook)
+	logContext.AddHook(hook)
 }
 
-// WithFields returns a standard logger with the context fields
+// With returns a new Context with the supplied fields
 func With(fields F) *Context {
 	return logContext.With(fields)
 }
 
-// WithError creates an entry from the standard logger and adds an error
+// Err creates a new Context from the standard logger and adds an error
 // to it, using the value defined in ErrorKey as key.
 func Err(err error) *Context {
 	return logContext.Err(err)
 }
 
-// Add modifies the global context
-func Add(fields F) *Context {
+// Add modifies the global context and returns itself
+func AddFields(fields F) *Context {
 	logContext.Add(fields)
 	return logContext
+}
+
+// GetFields will return the current set of fields in the global context
+func GetFields() F {
+	return logContext.Get()
 }
 
 // Debug logs a message at level Debug on the standard logger.

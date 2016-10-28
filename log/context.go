@@ -8,9 +8,10 @@
 // license: https://github.com/graze/golang-service/blob/master/LICENSE
 // link:    https://github.com/graze/golang-service
 
-package logging
+package log
 
 import (
+	"io"
 	"os"
 
 	"github.com/Sirupsen/logrus"
@@ -18,19 +19,24 @@ import (
 
 var (
 	logContext = New()
-	AppName    = "LOG_APPLICATION"
-	EnvName    = "ENVIRONMENT"
+	appName    = "LOG_APPLICATION"
+	envName    = "ENVIRONMENT"
 )
 
 type F logrus.Fields
 
-// Logger reduces the number of functions nad changes WithFields to With for
+// LogContext represents a Logging Context
 type LogContext interface {
 	With(fields F) *Context
 	Err(err error) *Context
 	Add(fields F) *Context
 	Merge(context LogContext) *Context
 	Get() F
+
+	SetOutput(out io.Writer)
+	SetLevel(level logrus.Level)
+	SetFormatter(formatter logrus.Formatter)
+	AddHook(hook logrus.Hook)
 
 	Debugf(format string, args ...interface{})
 	Infof(format string, args ...interface{})
@@ -47,7 +53,7 @@ type Context struct {
 	*logrus.Entry
 }
 
-// With adds fields
+// With creates a new `Context` and adds the fields to it
 func (c *Context) With(fields F) *Context {
 	// type conversion of same type without refection
 	data := make(logrus.Fields, len(fields))
@@ -58,13 +64,13 @@ func (c *Context) With(fields F) *Context {
 	return &Context{entry}
 }
 
-// Err adds an error and returns a new context
+// Err adds an error and returns a new `Context`
 func (c *Context) Err(err error) *Context {
 	entry := c.Entry.WithError(err)
 	return &Context{entry}
 }
 
-// Add will add the fields specified to the current context for future use
+// Add adds the fields to the current `Context` and returns itself
 func (c *Context) Add(fields F) *Context {
 	for k, v := range fields {
 		c.Entry.Data[k] = v
@@ -86,15 +92,40 @@ func (c *Context) Get() (fields F) {
 	return
 }
 
+// SetOutput changes the output of the current context
+func (c *Context) SetOutput(out io.Writer) {
+	c.Logger.Out = out
+}
+
+// SetFormatter will change the formatter for the current context
+func (c *Context) SetFormatter(formatter logrus.Formatter) {
+	c.Logger.Formatter = formatter
+}
+
+// SetLevel changes the default logging level of the current context
+func (c *Context) SetLevel(level logrus.Level) {
+	c.Logger.Level = level
+}
+
+// GetLevel returns the current logging level this context will log at
+func (c *Context) GetLevel() (level logrus.Level) {
+	return c.Logger.Level
+}
+
+// AddHook will add a hook to the current context
+func (c *Context) AddHook(hook logrus.Hook) {
+	c.Logger.Hooks.Add(hook)
+}
+
 // Create a new Context
 func New() (context *Context) {
 	base := logrus.New()
 	context = &Context{logrus.NewEntry(base)}
 	fields := make(F)
-	if app := os.Getenv(AppName); app != "" {
+	if app := os.Getenv(appName); app != "" {
 		fields["app"] = app
 	}
-	if env := os.Getenv(EnvName); env != "" {
+	if env := os.Getenv(envName); env != "" {
 		fields["env"] = env
 	}
 	context.Add(fields)

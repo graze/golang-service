@@ -8,14 +8,14 @@
 // license: https://github.com/graze/golang-service/blob/master/LICENSE
 // link:    https://github.com/graze/golang-service
 
-package logging
+package metrics
 
 import (
 	"net"
 	"os"
 	"testing"
 
-	"../nettest"
+	"github.com/graze/golang-service/nettest"
 	"github.com/stretchr/testify/assert"
 )
 

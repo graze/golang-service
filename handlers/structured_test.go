@@ -18,7 +18,7 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus/hooks/test"
-	log "github.com/graze/golang-service/logging"
+	"github.com/graze/golang-service/log"
 	"github.com/stretchr/testify/assert"
 )
 

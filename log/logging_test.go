@@ -8,7 +8,7 @@
 // license: https://github.com/graze/golang-service/blob/master/LICENSE
 // link:    https://github.com/graze/golang-service
 
-package logging
+package log
 
 import (
 	"os"
@@ -50,4 +50,40 @@ func TestEnvironment(t *testing.T) {
 	assert.Equal(t, "some text", hook.LastEntry().Message)
 	assert.Equal(t, "some_app", hook.LastEntry().Data["app"])
 	assert.Equal(t, "test", hook.LastEntry().Data["env"])
+}
+
+func TestGlobalConfiguration(t *testing.T) {
+	SetOutput(os.Stdout)
+	SetLevel(DebugLevel)
+	SetFormatter(&logrus.JSONFormatter{})
+
+	logger := New()
+
+	// New() uses the default settings
+	assert.Equal(t, os.Stderr, logger.Logger.Out)
+	assert.Equal(t, InfoLevel, logger.Logger.Level)
+	assert.IsType(t, (*logrus.TextFormatter)(nil), logger.Logger.Formatter)
+
+	context := With(F{})
+
+	assert.Equal(t, os.Stdout, context.Logger.Out)
+	assert.Equal(t, DebugLevel, context.Logger.Level)
+	assert.IsType(t, (*logrus.JSONFormatter)(nil), context.Logger.Formatter)
+}
+
+func TestModificationOfContextLogger(t *testing.T) {
+	logger := New()
+
+	// New() uses the default settings
+	assert.Equal(t, os.Stderr, logger.Logger.Out)
+	assert.Equal(t, InfoLevel, logger.Logger.Level)
+	assert.IsType(t, (*logrus.TextFormatter)(nil), logger.Logger.Formatter)
+
+	logger.SetOutput(os.Stdout)
+	logger.SetLevel(DebugLevel)
+	logger.SetFormatter(&logrus.JSONFormatter{})
+
+	assert.Equal(t, os.Stdout, logger.Logger.Out)
+	assert.Equal(t, DebugLevel, logger.Logger.Level)
+	assert.IsType(t, (*logrus.JSONFormatter)(nil), logger.Logger.Formatter)
 }
