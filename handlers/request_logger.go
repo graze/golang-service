@@ -17,14 +17,13 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	log "github.com/graze/golang-service/logging"
 	"github.com/twinj/uuid"
 )
 
 func LogServeHTTP(w http.ResponseWriter, req *http.Request, handler http.Handler, caller func(w LoggingResponseWriter, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int)) {
 	t := time.Now().UTC()
-	logger := MakeLogger(w, log.WithFields(logrus.Fields{}))
+	logger := MakeLogger(w, log.With(log.F{}))
 	url := *req.URL
 	handler.ServeHTTP(logger, req)
 	dur := time.Now().UTC().Sub(t)
@@ -39,21 +38,20 @@ func MakeLogger(w http.ResponseWriter, context log.LogContext) LoggingResponseWr
 		return w.(LoggingResponseWriter)
 	}
 
-	context.WithFields(logrus.Fields{
-		"tag": "logging_middleware_creation",
-	}).Info("Creating logging middleware")
-	logContext := context.WithFields(logrus.Fields{
+	context.Add(log.F{
 		"transaction": uuid.NewV4(),
 	})
+	context.With(log.F{"tag": "logging_middleware_creation"}).
+		Info("Creating logging middleware")
 
 	var logger LoggingResponseWriter = &responseLogger{
 		w:       w,
-		Context: logContext,
+		Context: context,
 	}
 	if _, ok := w.(http.Hijacker); ok {
 		logger = &hijackLogger{responseLogger{
 			w:       w,
-			Context: logContext,
+			Context: context,
 		}}
 	}
 	h, ok1 := logger.(http.Hijacker)
@@ -72,26 +70,20 @@ type LoggingResponseWriter interface {
 	http.Flusher
 	Status() int
 	Size() int
-	AddContext(fields logrus.Fields)
-	GetContext() *logrus.Entry
+	GetContext() log.LogContext
 }
 
 // responseLogger is wrapper of http.ResponseWriter that keeps track of its HTTP
 // status code and body size
 type responseLogger struct {
 	w       http.ResponseWriter
-	Context *logrus.Entry
+	Context log.LogContext
 	status  int
 	size    int
 }
 
-// AddContext appends items to the current logging context for this http request
-func (l *responseLogger) AddContext(fields logrus.Fields) {
-	l.Context = l.Context.WithFields(fields)
-}
-
 // GetContext gets the current logging context for this http request
-func (l *responseLogger) GetContext() *logrus.Entry {
+func (l *responseLogger) GetContext() log.LogContext {
 	if l.Context == nil {
 		panic("responseLogger Context is nil")
 	}

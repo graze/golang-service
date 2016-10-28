@@ -11,11 +11,9 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	log "github.com/graze/golang-service/logging"
 )
 
@@ -29,10 +27,10 @@ func (h logContextHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	t := time.Now().UTC()
 	logger := MakeLogger(w, h.logger)
 	url := *req.URL
-	fmt.Printf("logger: %s", logger.GetContext())
-	logger.GetContext().Info("test")
-	h.logger.Info("test2")
-	logger.AddContext(logrus.Fields{
+	context := logger.GetContext()
+	context.Info("test of MakeLogger GetContext()")
+	h.logger.Info("test of logContextHandler log context")
+	context.Add(log.F{
 		"http.method":   req.Method,
 		"http.protocol": req.Proto,
 		"http.uri":      parseUri(req, url),
@@ -42,7 +40,7 @@ func (h logContextHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	h.handler.ServeHTTP(logger, req)
 	dur := time.Now().UTC().Sub(t)
 	sDur := float64(dur.Nanoseconds()) / (float64(time.Second) / float64(time.Nanosecond))
-	logger.AddContext(logrus.Fields{
+	context.Add(log.F{
 		"http.status": logger.Status(),
 		"http.bytes":  logger.Size(),
 		"http.dur":    sDur,
@@ -56,5 +54,5 @@ func LogContextHandler(h http.Handler) http.Handler {
 
 // LogContextHandler returns a handler that adds `http` and `transaction` items into the provided logging context
 func LoggingContextHandler(logger log.LogContext, h http.Handler) http.Handler {
-	return logContextHandler{logger.WithFields(logrus.Fields{}), h}
+	return logContextHandler{logger.With(log.F{}), h}
 }

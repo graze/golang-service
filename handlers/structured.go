@@ -15,7 +15,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	log "github.com/graze/golang-service/logging"
 )
 
@@ -42,7 +41,7 @@ func writeStructuredLog(w LoggingResponseWriter, logger log.LogContext, req *htt
 	sDur := float64(dur.Nanoseconds()) / (float64(time.Second) / float64(time.Nanosecond))
 	uri := parseUri(req, url)
 
-	logger.WithFields(logrus.Fields{
+	logger.With(log.F{
 		"tag":           "request_handled",
 		"http.method":   req.Method,
 		"http.protocol": req.Proto,
@@ -81,7 +80,7 @@ func StructuredLogHandler(logger log.LogContext, h http.Handler) http.Handler {
 // and setting a context with the fields:
 // 	component = request.handler
 func StructuredHandler(h http.Handler) http.Handler {
-	context := log.WithFields(logrus.Fields{
+	context := log.With(log.F{
 		"module": "request.handler",
 	})
 	return structuredHandler{context, h}

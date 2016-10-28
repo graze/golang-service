@@ -63,52 +63,58 @@ func AddHook(hook logrus.Hook) {
 }
 
 // WithFields returns a standard logger with the context fields
-func WithFields(fields logrus.Fields) *logrus.Entry {
-	return context.WithFields(fields)
+func With(fields F) *Context {
+	return logContext.With(fields)
 }
 
 // WithError creates an entry from the standard logger and adds an error
 // to it, using the value defined in ErrorKey as key.
-func WithError(err error) *logrus.Entry {
-	return context.WithError(err)
+func Err(err error) *Context {
+	return logContext.Err(err)
+}
+
+// Add modifies the global context
+func Add(fields F) *Context {
+	logContext.Add(fields)
+	return logContext
 }
 
 // Debug logs a message at level Debug on the standard logger.
 func Debug(args ...interface{}) {
-	context.Debug(args...)
+	logContext.Debug(args...)
 }
 
 // Print logs a message at level Info on the standard logger.
 func Print(args ...interface{}) {
-	context.Print(args...)
+	logContext.Print(args...)
 }
 
 // Info logs a message at level Info on the standard logger.
 func Info(args ...interface{}) {
-	context.Info(args...)
+	logContext.Info(args...)
 }
 
 // Error logs a message at level Error on the standard logger.
 func Error(args ...interface{}) {
-	context.Error(args...)
+	logContext.Error(args...)
 }
 
 // Debugf logs a message at level Debug on the standard logger.
 func Debugf(format string, args ...interface{}) {
-	context.Debugf(format, args...)
+	logContext.Debugf(format, args...)
 }
 
 // Printf logs a message at level Info on the standard logger.
 func Printf(format string, args ...interface{}) {
-	context.Printf(format, args...)
+	logContext.Printf(format, args...)
 }
 
 // Infof logs a message at level Info on the standard logger.
 func Infof(format string, args ...interface{}) {
-	context.Infof(format, args...)
+	logContext.Infof(format, args...)
 }
 
 // Errorf logs a message at level Error on the standard logger.
 func Errorf(format string, args ...interface{}) {
-	context.Errorf(format, args...)
+	logContext.Errorf(format, args...)
 }

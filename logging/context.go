@@ -17,15 +17,18 @@ import (
 )
 
 var (
-	context = New()
-	AppName = "LOG_APPLICATION"
-	EnvName = "ENVIRONMENT"
+	logContext = New()
+	AppName    = "LOG_APPLICATION"
+	EnvName    = "ENVIRONMENT"
 )
+
+type F logrus.Fields
 
 // Logger reduces the number of functions nad changes WithFields to With for
 type LogContext interface {
-	WithFields(fields logrus.Fields) *logrus.Entry
-	WithError(err error) *logrus.Entry
+	With(fields F) *Context
+	Err(err error) *Context
+	Add(fields F)
 
 	Debugf(format string, args ...interface{})
 	Infof(format string, args ...interface{})
@@ -38,16 +41,45 @@ type LogContext interface {
 	Error(args ...interface{})
 }
 
-// Create a new base LogContext
-func New() (entry *logrus.Entry) {
+type Context struct {
+	*logrus.Entry
+}
+
+// With adds fields
+func (c *Context) With(fields F) *Context {
+	// type conversion of same type without refection
+	data := make(logrus.Fields, len(fields))
+	for k, v := range fields {
+		data[k] = v
+	}
+	entry := c.Entry.WithFields(data)
+	return &Context{entry}
+}
+
+// Err adds an error and returns a new context
+func (c *Context) Err(err error) *Context {
+	entry := c.Entry.WithError(err)
+	return &Context{entry}
+}
+
+// Add will add the fields specified to the current context for future use
+func (c *Context) Add(fields F) {
+	for k, v := range fields {
+		c.Entry.Data[k] = v
+	}
+}
+
+// Create a new Context
+func New() (context *Context) {
 	base := logrus.New()
-	fields := make(logrus.Fields)
+	context = &Context{logrus.NewEntry(base)}
+	fields := make(F)
 	if app := os.Getenv(AppName); app != "" {
 		fields["app"] = app
 	}
 	if env := os.Getenv(EnvName); env != "" {
 		fields["env"] = env
 	}
-	entry = base.WithFields(fields)
+	context.Add(fields)
 	return
 }
