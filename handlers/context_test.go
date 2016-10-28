@@ -107,7 +107,8 @@ func TestContextUpdatesTheRequestContext(t *testing.T) {
 	for k, tc := range cases {
 		var logger LoggingResponseWriter = nil
 		beforeHandler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			if logger, ok = w.(LoggingResponseWriter); ok {
+			if _, ok := w.(LoggingResponseWriter); ok {
+				logger = w.(LoggingResponseWriter)
 				context := logger.GetContext()
 				if entry, ok := context.(*log.Context); ok {
 					for f, v := range tc.before {
