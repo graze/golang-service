@@ -2,6 +2,10 @@
 
 [![Build Status](https://travis-ci.org/graze/golang-service.svg?branch=master)](https://travis-ci.org/graze/golang-service)
 
+- [Log](#Log) Structured Contextual logging
+- [Handlers](#Handlers) http request middleware to add logging (healthd, context, statsd, structured logs)
+- [NetTest](#NetTest) helpers for use when testing networks
+
 ## Log
 
 Handle global logging with context. Based on [logrus](https://github.com/Sirupsen/logrus)

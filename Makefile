@@ -9,6 +9,9 @@ MOUNT=/go/src/github.com/graze/golang-service
 install: ## Install the dependencies
 	${DOCKER_CMD} glide install
 
+update: ## Update dependencies
+	${DOCKER_CMD} glide update
+
 cli: ## Open a shell to the docker environment
 	${DOCKER_CMD} sh
 
