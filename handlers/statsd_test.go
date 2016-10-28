@@ -11,89 +11,141 @@
 package handlers
 
 import (
-    "testing"
-    "github.com/graze/golang-service/nettest"
-    "github.com/stretchr/testify/assert"
-    "net"
-    "net/http"
-    "net/http/httptest"
-    "os"
+	"net"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"os"
+	"testing"
+	"time"
+
+	"github.com/DataDog/datadog-go/statsd"
+	"github.com/graze/golang-service/nettest"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestStatsdLogging(t *testing.T) {
-    tests := map[string]struct{
-        request *http.Request
-        expected []string
-    }{
-        "simple get": { newRequest("GET", "http://example.com"), []string{
-            "request.response_time:0.000000|ms|#endpoint:/,statusCode:200,method:GET,protocol:HTTP/1.1",
-            "request.count:1|c|#endpoint:/,statusCode:200,method:GET,protocol:HTTP/1.1",
-        }},
-        "post removes fields": { newRequest("POST", "http://example.com/token?apid=1"), []string{
-            "request.response_time:0.000000|ms|#endpoint:/token,statusCode:200,method:POST,protocol:HTTP/1.1",
-            "request.count:1|c|#endpoint:/token,statusCode:200,method:POST,protocol:HTTP/1.1",
-        }},
-    }
-
-    done := make(chan string)
-    addr, sock, srvWg := nettest.CreateServer(t, "udp", "localhost:", done)
-    defer srvWg.Wait()
-    defer os.Remove(addr.String())
-    defer sock.Close()
-
-    host, port, err := net.SplitHostPort(addr.String())
-    if err != nil {
-        t.Fatal(err)
-    }
-    os.Setenv("STATSD_HOST", host)
-    os.Setenv("STATSD_PORT", port)
-
-    handler := StatsdHandler(okHandler)
-
-    for k, tc := range tests {
-        rec := httptest.NewRecorder()
-        handler.ServeHTTP(rec, tc.request)
-
-        assert.Equal(t, http.StatusOK, rec.Code)
-
-        for _, message := range tc.expected {
-            assert.Equal(t, message, <-done, "test: %s", k)
-        }
-    }
+func getDuration(t *testing.T, dur string) (duration time.Duration) {
+	duration, err := time.ParseDuration(dur)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return
 }
 
-func TestStatsdLoggingWithNamespaceAndTags(t *testing.T) {
-    done := make(chan string)
-    addr, sock, srvWg := nettest.CreateServer(t, "udp", "localhost:", done)
-    defer srvWg.Wait()
-    defer os.Remove(addr.String())
-    defer sock.Close()
+func TestStatsdLogging(t *testing.T) {
+	cases := map[string]struct {
+		request   *http.Request
+		timestamp time.Time
+		duration  time.Duration
+		expected  []string
+	}{
+		"basic": {
+			newRequest("GET", "http://example.com"),
+			time.Now().UTC(),
+			getDuration(t, "0.302s"),
+			[]string{
+				"service.logging.live.request.response_time:302.000000|ms|#test,endpoint:/,statusCode:200,method:GET,protocol:HTTP/1.1",
+				"service.logging.live.request.count:1|c|#test,endpoint:/,statusCode:200,method:GET,protocol:HTTP/1.1",
+			},
+		},
+		"post path": {
+			newRequest("POST", "http://example.com/path/here"),
+			time.Now().UTC(),
+			getDuration(t, "0.102s"),
+			[]string{
+				"service.logging.live.request.response_time:102.000000|ms|#test,endpoint:/path/here,statusCode:200,method:POST,protocol:HTTP/1.1",
+				"service.logging.live.request.count:1|c|#test,endpoint:/path/here,statusCode:200,method:POST,protocol:HTTP/1.1",
+			},
+		},
+		"strips params off method": {
+			newRequest("GET", "http://example.com/token/1/test?apid=1&thing=2"),
+			time.Now().UTC(),
+			getDuration(t, "0.927s"),
+			[]string{
+				"service.logging.live.request.response_time:927.000000|ms|#test,endpoint:/token/1/test,statusCode:200,method:GET,protocol:HTTP/1.1",
+				"service.logging.live.request.count:1|c|#test,endpoint:/token/1/test,statusCode:200,method:GET,protocol:HTTP/1.1",
+			},
+		},
+		"connect http2 test": {
+			&http.Request{
+				Method:     "CONNECT",
+				Proto:      "HTTP/2.0",
+				ProtoMajor: 2,
+				ProtoMinor: 0,
+				URL:        &url.URL{Host: "www.example.com:443"},
+				Host:       "www.example.com:443",
+				RemoteAddr: "192.168.100.5",
+			},
+			time.Now().UTC(),
+			getDuration(t, "0.927s"),
+			[]string{
+				"service.logging.live.request.response_time:927.000000|ms|#test,endpoint:www.example.com:443,statusCode:200,method:CONNECT,protocol:HTTP/2.0",
+				"service.logging.live.request.count:1|c|#test,endpoint:www.example.com:443,statusCode:200,method:CONNECT,protocol:HTTP/2.0",
+			},
+		},
+	}
 
-    host, port, err := net.SplitHostPort(addr.String())
-    if err != nil {
-        t.Fatal(err)
-    }
-    os.Setenv("STATSD_HOST", host)
-    os.Setenv("STATSD_PORT", port)
-    os.Setenv("STATSD_NAMESPACE", "service.")
-    os.Setenv("STATSD_TAGS", "tag1:value,tag2")
+	done := make(chan string)
+	addr, sock, srvWg := nettest.CreateServer(t, "udp", "localhost:", done)
+	defer srvWg.Wait()
+	defer os.Remove(addr.String())
+	defer sock.Close()
 
-    handler := StatsdHandler(okHandler)
+	client, err := statsd.New(addr.String())
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.Tags = append(client.Tags, "test")
+	client.Namespace = "service.logging.live."
 
-	// A typical request with an OK response
-	req := newRequest("POST", "http://example.com/some/path")
+	for k, tc := range cases {
+		writeStatsdLog(client, tc.request, *tc.request.URL, tc.timestamp, tc.duration, http.StatusOK, 100)
+		for _, message := range tc.expected {
+			assert.Equal(t, message, <-done, "test: %s", k)
+		}
+	}
+}
 
-    rec := httptest.NewRecorder()
-    handler.ServeHTTP(rec, req)
+func TestStatsdHandler(t *testing.T) {
+	tests := map[string]struct {
+		request  *http.Request
+		expected []string
+	}{
+		"simple get": {newRequest("GET", "http://example.com"), []string{
+			"service.test.request.response_time:0.000000|ms|#tag1,tag2:value,endpoint:/,statusCode:200,method:GET,protocol:HTTP/1.1",
+			"service.test.request.count:1|c|#tag1,tag2:value,endpoint:/,statusCode:200,method:GET,protocol:HTTP/1.1",
+		}},
+		"post removes fields": {newRequest("POST", "http://example.com/token?apid=1"), []string{
+			"service.test.request.response_time:0.000000|ms|#tag1,tag2:value,endpoint:/token,statusCode:200,method:POST,protocol:HTTP/1.1",
+			"service.test.request.count:1|c|#tag1,tag2:value,endpoint:/token,statusCode:200,method:POST,protocol:HTTP/1.1",
+		}},
+	}
 
-    assert.Equal(t, http.StatusOK, rec.Code)
+	done := make(chan string)
+	addr, sock, srvWg := nettest.CreateServer(t, "udp", "localhost:", done)
+	defer srvWg.Wait()
+	defer os.Remove(addr.String())
+	defer sock.Close()
 
-    expected := []string{
-        "service.request.response_time:0.000000|ms|#tag1:value,tag2,endpoint:/some/path,statusCode:200,method:POST,protocol:HTTP/1.1",
-        "service.request.count:1|c|#tag1:value,tag2,endpoint:/some/path,statusCode:200,method:POST,protocol:HTTP/1.1",
-    }
+	host, port, err := net.SplitHostPort(addr.String())
+	if err != nil {
+		t.Fatal(err)
+	}
+	os.Setenv("STATSD_HOST", host)
+	os.Setenv("STATSD_PORT", port)
+	os.Setenv("STATSD_NAMESPACE", "service.test.")
+	os.Setenv("STATSD_TAGS", "tag1,tag2:value")
 
-    for _, message := range expected {
-        assert.Equal(t, message, <-done)
-    }
+	handler := StatsdHandler(okHandler)
+
+	for k, tc := range tests {
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, tc.request)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+
+		for _, message := range tc.expected {
+			assert.Equal(t, message, <-done, "test: %s", k)
+		}
+	}
 }
