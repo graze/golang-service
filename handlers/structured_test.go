@@ -60,6 +60,7 @@ func TestStructuredLogging(t *testing.T) {
 				"ts":            now.Format(time.RFC3339Nano),
 				"http.ref":      "",
 				"http.user":     "",
+				"transaction":   "test-123",
 			},
 		},
 		"post path": {
@@ -82,6 +83,7 @@ func TestStructuredLogging(t *testing.T) {
 				"ts":            now.Format(time.RFC3339Nano),
 				"http.ref":      "",
 				"http.user":     "",
+				"transaction":   "test-123",
 			},
 		},
 		"strips params off method": {
@@ -104,6 +106,7 @@ func TestStructuredLogging(t *testing.T) {
 				"ts":            now.Format(time.RFC3339Nano),
 				"http.ref":      "",
 				"http.user":     "",
+				"transaction":   "test-123",
 			},
 		},
 		"connect http2 test": {
@@ -156,6 +159,7 @@ func TestStructuredLogging(t *testing.T) {
 				"ts":            now.Format(time.RFC3339Nano),
 				"http.ref":      "http://google.com",
 				"http.user":     "",
+				"transaction":   "test-123",
 			},
 		},
 		"handles x-forwarded-for": {
@@ -178,11 +182,13 @@ func TestStructuredLogging(t *testing.T) {
 				"ts":            now.Format(time.RFC3339Nano),
 				"http.ref":      "",
 				"http.user":     "192.168.100.5",
+				"transaction":   "test-123",
 			},
 		},
 	}
 
 	logger := log.New()
+	logger.Add(log.F{"transaction": "test-123"})
 	hook := test.NewLocal(logger.Logger)
 	context := log.With(log.F{"module": "request.handler"})
 

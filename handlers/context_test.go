@@ -107,15 +107,15 @@ func TestContextUpdatesTheRequestContext(t *testing.T) {
 	for k, tc := range cases {
 		var logger LoggingResponseWriter = nil
 		beforeHandler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			if _, ok := w.(LoggingResponseWriter); ok {
-				logger = w.(LoggingResponseWriter)
+			if logger, ok = w.(LoggingResponseWriter); ok {
 				context := logger.GetContext()
-				if _, ok := context.(*log.Context); ok {
-					entry := context.(*log.Context)
+				if entry, ok := context.(*log.Context); ok {
 					for f, v := range tc.before {
 						assert.Contains(t, entry.Data, f, "test %s - Has Field: %s", k, f)
 						assert.Equal(t, v, entry.Data[f], "test %s - Field: %s", k, f)
 					}
+				} else {
+					t.Error("logger.GetContext() should implement (*log.Context)")
 				}
 			} else {
 				t.Error("http.ResponseWriter should implement LoggingResponseWriter")
@@ -126,8 +126,7 @@ func TestContextUpdatesTheRequestContext(t *testing.T) {
 		handler := LogContextHandler(beforeHandler)
 		handler.ServeHTTP(rec, tc.request)
 		context := logger.GetContext()
-		if _, ok := context.(*log.Context); ok {
-			entry := context.(*log.Context)
+		if entry, ok := context.(*log.Context); ok {
 			for f, v := range tc.after {
 				assert.Contains(t, entry.Data, f, "test %s - Has Field: %s", k, f)
 				assert.Regexp(t, v, entry.Data[f], "test %s - Field: %s", k, f)

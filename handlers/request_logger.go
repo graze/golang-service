@@ -34,8 +34,8 @@ func LogServeHTTP(w http.ResponseWriter, req *http.Request, handler http.Handler
 //
 // The loggingResponsWriter adds status field and the size of the response to the LoggingResponseWriter
 func MakeLogger(w http.ResponseWriter, context log.LogContext) LoggingResponseWriter {
-	if _, ok := w.(LoggingResponseWriter); ok {
-		return w.(LoggingResponseWriter)
+	if logResponse, ok := w.(LoggingResponseWriter); ok {
+		return logResponse
 	}
 
 	context.Add(log.F{
