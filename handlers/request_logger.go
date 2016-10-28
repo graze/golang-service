@@ -41,9 +41,6 @@ func MakeLogger(w http.ResponseWriter, context log.LogContext) LoggingResponseWr
 	context.Add(log.F{
 		"transaction": uuid.NewV4(),
 	})
-	context.With(log.F{"tag": "logging_middleware_creation"}).
-		Info("Creating logging middleware")
-
 	var logger LoggingResponseWriter = &responseLogger{
 		w:       w,
 		Context: context,
@@ -84,9 +81,6 @@ type responseLogger struct {
 
 // GetContext gets the current logging context for this http request
 func (l *responseLogger) GetContext() log.LogContext {
-	if l.Context == nil {
-		panic("responseLogger Context is nil")
-	}
 	return l.Context
 }
 

@@ -28,8 +28,6 @@ func (h logContextHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	logger := MakeLogger(w, h.logger)
 	url := *req.URL
 	context := logger.GetContext()
-	context.Info("test of MakeLogger GetContext()")
-	h.logger.Info("test of logContextHandler log context")
 	context.Add(log.F{
 		"http.method":   req.Method,
 		"http.protocol": req.Proto,

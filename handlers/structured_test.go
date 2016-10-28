@@ -47,6 +47,7 @@ func TestStructuredLogging(t *testing.T) {
 			100,
 			"GET / HTTP/1.1",
 			map[string]interface{}{
+				"module":        "request.handler",
 				"tag":           "request_handled",
 				"http.method":   "GET",
 				"http.protocol": "HTTP/1.1",
@@ -68,6 +69,7 @@ func TestStructuredLogging(t *testing.T) {
 			200,
 			"POST /path/here HTTP/1.1",
 			map[string]interface{}{
+				"module":        "request.handler",
 				"tag":           "request_handled",
 				"http.method":   "POST",
 				"http.protocol": "HTTP/1.1",
@@ -89,6 +91,7 @@ func TestStructuredLogging(t *testing.T) {
 			300,
 			"GET /token/1/test?apid=1&thing=2 HTTP/1.1",
 			map[string]interface{}{
+				"module":        "request.handler",
 				"tag":           "request_handled",
 				"http.method":   "GET",
 				"http.protocol": "HTTP/1.1",
@@ -118,6 +121,7 @@ func TestStructuredLogging(t *testing.T) {
 			400,
 			"CONNECT www.example.com:443 HTTP/2.0",
 			map[string]interface{}{
+				"module":        "request.handler",
 				"tag":           "request_handled",
 				"http.method":   "CONNECT",
 				"http.protocol": "HTTP/2.0",
@@ -139,6 +143,7 @@ func TestStructuredLogging(t *testing.T) {
 			500,
 			"GET /test HTTP/1.1",
 			map[string]interface{}{
+				"module":        "request.handler",
 				"tag":           "request_handled",
 				"http.method":   "GET",
 				"http.protocol": "HTTP/1.1",
@@ -160,6 +165,7 @@ func TestStructuredLogging(t *testing.T) {
 			600,
 			"GET / HTTP/1.1",
 			map[string]interface{}{
+				"module":        "request.handler",
 				"tag":           "request_handled",
 				"http.method":   "GET",
 				"http.protocol": "HTTP/1.1",
@@ -178,12 +184,13 @@ func TestStructuredLogging(t *testing.T) {
 
 	logger := log.New()
 	hook := test.NewLocal(logger.Logger)
+	context := log.F{"module": "request.handler"}
 
 	for k, tc := range cases {
 		hook.Reset()
 		rec := httptest.NewRecorder()
 		responseLogger := &responseLogger{w: rec, Context: logger}
-		writeStructuredLog(responseLogger, logger, tc.request, *tc.request.URL, tc.timestamp, tc.duration, http.StatusOK, tc.size)
+		writeStructuredLog(responseLogger, context, tc.request, *tc.request.URL, tc.timestamp, tc.duration, http.StatusOK, tc.size)
 		assert.Equal(t, 1, len(hook.Entries), "test %s - Has Log Entry", k)
 		assert.Equal(t, log.InfoLevel, hook.LastEntry().Level, "test %s - Has Log Level", k)
 		assert.Equal(t, tc.message, hook.LastEntry().Message, "test %s - Has Message", k)
