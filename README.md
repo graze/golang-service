@@ -2,14 +2,15 @@
 
 [![Build Status](https://travis-ci.org/graze/golang-service.svg?branch=master)](https://travis-ci.org/graze/golang-service)
 
-- [Log](#Log) Structured Contextual logging
-- [Handlers](#Handlers) http request middleware to add logging (healthd, context, statsd, structured logs)
-- [NetTest](#NetTest) helpers for use when testing networks
+- [Log](#log) Structured Contextual logging
+- [Handlers](#handlers) http request middleware to add logging (healthd, context, statsd, structured logs)
+- [Metrics](#metrics) send monitoring metrics to collectors (currently: stats)
+- [NetTest](#nettest) helpers for use when testing networks
 
 ## Log
 
 Handle global logging with context. Based on [logrus](https://github.com/Sirupsen/logrus)
-with an option to create a global context
+with an option to create a global context.
 
 It uses [logfmt](https://brandur.org/logfmt) by default but can also output `json` using a `&logrus.JSONFormatter()`
 
@@ -187,49 +188,20 @@ Default Output:
 time="2016-10-28T10:51:32Z" level=info msg="GET / HTTP/1.1" dur=0.003200881 http.bytes=80 http.host="localhost:1123" http.method=GET http.path="/" http.protocol="HTTP/1.1" http.ref= http.status=200 http.uri="/" http.user= module=request.handler tag="request_handled" ts="2016-10-28T10:51:31.542424381Z"
 ```
 
-## Pre-build handlers
+## Metrics
 
-This is a collection of pre-made handlers that use environment variables to quickly add to your application
+Provides statsd metrics sending
 
-```bash
-$ go get github.com/graze/golang-service/handlers
-```
-
-### Healthd
-
-This will create the application.log files in `/var/log/nginx/healthd/` and rotate them for you
-
+Manually create a client
 ```go
-loggedRouter := handlers.HealthdHandler(r)
-http.ListenAndServe(":1123", loggedRouter)
+client, _ := metrics.GetStatsd(StatdClientConf{host,port,namespace,tags})
+client.Incr("metric", []string{}, 1)
 ```
 
-### StatsD
-
-This will output to StatsD using the following variables
-
-Environment Variables:
-```
-    STATSD_HOST: The host of the statsd server
-    STATSD_PORT: The port of the statsd server
-    STATSD_NAMESPACE: The namespace to prefix to every metric name
-    STATSD_TAGS: A comma separared list of tags to apply to every metric reported
-```
-Example:
-```
-    STATSD_HOST: localhost
-    STATSD_PORT: 8125
-    STATSD_NAMESPACE: app.live.
-    STATSD_TAGS: env:live,version:1.0.2
-```
-Usage:
+Create a client using environment variables. [see above](#statsd-logger)
 ```go
-r := mux.NewRouter()
-r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-   w.Write([]byte("This is a catch-all route"))
-})
-loggedRouter := handlers.StatsdHandler(r)
-http.ListenAndServe(":1123", loggedRouter)
+client, _ := metrics.GetStatsdFromEnv()
+client.Incr("metric", []string{}, 1)
 ```
 
 ## NetTest
