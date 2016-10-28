@@ -25,3 +25,17 @@ func TestNewContext(t *testing.T) {
 	assert.Equal(t, 3, hook.LastEntry().Data["2"])
 	assert.Equal(t, "test2", hook.LastEntry().Data["test"])
 }
+
+func TestMergeContext(t *testing.T) {
+	context := New()
+	context.Add(F{"test": 1})
+
+	context2 := New()
+	context2.Add(F{"test2": 2})
+
+	assert.Equal(t, F{"test": 1}, context.Get())
+	assert.Equal(t, F{"test2": 2}, context2.Get())
+
+	assert.Exactly(t, context, context.Merge(context2))
+	assert.Equal(t, F{"test": 1, "test2": 2}, context.Get())
+}

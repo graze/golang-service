@@ -29,6 +29,8 @@ type LogContext interface {
 	With(fields F) *Context
 	Err(err error) *Context
 	Add(fields F) *Context
+	Merge(context LogContext) *Context
+	Get() F
 
 	Debugf(format string, args ...interface{})
 	Infof(format string, args ...interface{})
@@ -68,6 +70,20 @@ func (c *Context) Add(fields F) *Context {
 		c.Entry.Data[k] = v
 	}
 	return c
+}
+
+// Merge will merge the fields in the supplied `context` into this `Context`
+func (c *Context) Merge(context LogContext) *Context {
+	return c.Add(context.Get())
+}
+
+// Get will return the current fields attached to a context
+func (c *Context) Get() (fields F) {
+	fields = make(F, len(c.Entry.Data))
+	for k, v := range c.Entry.Data {
+		fields[k] = v
+	}
+	return
 }
 
 // Create a new Context

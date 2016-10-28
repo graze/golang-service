@@ -184,7 +184,7 @@ func TestStructuredLogging(t *testing.T) {
 
 	logger := log.New()
 	hook := test.NewLocal(logger.Logger)
-	context := log.F{"module": "request.handler"}
+	context := log.With(log.F{"module": "request.handler"})
 
 	for k, tc := range cases {
 		hook.Reset()
