@@ -43,7 +43,7 @@ func (h healthdHandler) writeLog(w LoggingResponseWriter, req *http.Request, url
 // The format of the file is:
 // <unix_timestamp.ms>"<path>"<status>"<request_time>"<upstream_time>"<X-Forwarded-For header>
 func writeHealthdLog(w io.Writer, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
-	uri := parseUri(req, url)
+	uri := parseURI(req, url)
 	msDur := float64(dur.Nanoseconds()) / (float64(time.Second) / float64(time.Nanosecond))
 	str := fmt.Sprintf(`%.3f%s%d"%.3f"%.3f"%s`+"\n",
 		float64(ts.UnixNano())/(float64(time.Second)/float64(time.Nanosecond)),

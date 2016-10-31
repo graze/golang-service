@@ -62,19 +62,19 @@ func AddHook(hook logrus.Hook) {
 	logContext.AddHook(hook)
 }
 
-// With returns a new Context with the supplied fields
-func With(fields F) *Context {
+// With returns a new ContextEntry with the supplied fields
+func With(fields F) *ContextEntry {
 	return logContext.With(fields)
 }
 
-// Err creates a new Context from the standard logger and adds an error
+// Err creates a new ContextEntry from the standard logger and adds an error
 // to it, using the value defined in ErrorKey as key.
-func Err(err error) *Context {
+func Err(err error) *ContextEntry {
 	return logContext.Err(err)
 }
 
-// Add modifies the global context and returns itself
-func AddFields(fields F) *Context {
+// AddFields modifies the global context and returns itself
+func AddFields(fields F) *ContextEntry {
 	logContext.Add(fields)
 	return logContext
 }

@@ -27,7 +27,7 @@ Usage:
 They can also be manually chained together
     loggedRouter := handlers.StatsdHandler(handlers.HealthdHandler(r))
 
-Logging Context
+Logging ContextEntry
 
 This creates a logging context to be passed into the handling function with information about the request
 

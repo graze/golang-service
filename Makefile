@@ -18,14 +18,16 @@ cli: ## Open a shell to the docker environment
 
 test: ver ?= alpine
 test: ## Run the tests
-	docker run --rm -it -v $(PWD):${MOUNT} -w ${MOUNT} golang:${ver} go test $$(${DOCKER_CMD} glide nv -x | tr '\n\r' ' ')
+	docker run --rm -it -v $(PWD):${MOUNT} -w ${MOUNT} golang:${ver} go test ${CODE}
 
 doc: ## Build API documentation
 	${DOCKER_CMD} godoc github.com/graze/golang-service
 
 lint: ## Run gofmt and goimports in lint mode
-	! ${DOCKER_CMD} gofmt -d -s ${CODE} | grep '^'
-	! ${DOCKER_CMD} goimports -d ${CODE} | grep '^'
+	${DOCKER_CMD} golint -set_exit_status ./handlers/...
+	${DOCKER_CMD} golint -set_exit_status ./log/...
+	${DOCKER_CMD} golint -set_exit_status ./metrics/...
+	${DOCKER_CMD} golint -set_exit_status ./nettest/...
 
 format: ## Run gofmt to format the code
 	${DOCKER_CMD} gofmt -s -w ${CODE}

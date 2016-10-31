@@ -89,7 +89,7 @@ Collection of middleware handlers for use by HTTP services
 $ go get github.com/graze/golang-service/handlers
 ```
 
-### Context Adder
+### ContextEntry Adder
 
 Adds context to the responseWriter so it can be accessed from within a method. It also
 
