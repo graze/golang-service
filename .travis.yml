@@ -14,4 +14,5 @@ install:
   - make install
 
 script:
-  - make test
+  - "make lint"
+  - "make test"
