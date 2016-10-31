@@ -5,6 +5,7 @@
 
 DOCKER_CMD=docker-compose run --rm local
 MOUNT=/go/src/github.com/graze/golang-service
+CODE=./handlers ./log ./metrics ./nettest
 
 install: ## Install the dependencies
 	${DOCKER_CMD} glide install
@@ -23,13 +24,12 @@ doc: ## Build API documentation
 	${DOCKER_CMD} godoc github.com/graze/golang-service
 
 lint: ## Run gofmt and goimports in lint mode
-	echo $$(${DOCKER_CMD} glide nv -x | tr '\r' ' ')
-	! ${DOCKER_CMD} gofmt -d -s $$(${DOCKER_CMD} glide nv -x | tr '\r' ' ') | grep '^'
-	! ${DOCKER_CMD} goimports -d $$(${DOCKER_CMD} glide nv -x | tr '\r' ' ') | grep '^'
+	! ${DOCKER_CMD} gofmt -d -s ${CODE} | grep '^'
+	! ${DOCKER_CMD} goimports -d ${CODE} | grep '^'
 
 format: ## Run gofmt to format the code
-	${DOCKER_CMD} gofmt -s -w $$(${DOCKER_CMD} glide nv -x | tr '\n\r' ' ')
-	${DOCKER_CMD} goimports -w $$(${DOCKER_CMD} glide nv -x | tr '\n\r' ' ')
+	${DOCKER_CMD} gofmt -s -w ${CODE}
+	${DOCKER_CMD} goimports -w ${CODE}
 
 # Build targets
 .SILENT: help
