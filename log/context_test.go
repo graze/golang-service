@@ -49,3 +49,15 @@ func TestMergeContext(t *testing.T) {
 	assert.Exactly(t, context, context.Merge(context2))
 	assert.Equal(t, F{"test": 1, "test2": 2}, context.Get())
 }
+
+func testImplements(t *testing.T) {
+	context := New()
+	assert.Implements(t, (*Logger)(nil), context)
+	assert.Implements(t, (*LogContext)(nil), context)
+
+	local := context.With(F{"k": "v"})
+	assert.Implements(t, (*LogContext)(nil), local)
+
+	global := With(F{"k": "v"})
+	assert.Implements(t, (*LogContext)(nil), global)
+}

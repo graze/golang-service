@@ -22,6 +22,10 @@ test: ## Run the tests
 doc: ## Build API documentation
 	${DOCKER_CMD} godoc github.com/graze/golang-service
 
+lint: ## Run gofmt and goimports in lint mode
+	${DOCKER_CMD} gofmt -d -e -s $$(${DOCKER_CMD} glide nv -x | tr '\n\r' ' ')
+	${DOCKER_CMD} goimports -d -e $$(${DOCKER_CMD} glide nv -x | tr '\n\r' ' ')
+
 format: ## Run gofmt to format the code
 	${DOCKER_CMD} gofmt -s -w $$(${DOCKER_CMD} glide nv -x | tr '\n\r' ' ')
 	${DOCKER_CMD} goimports -w $$(${DOCKER_CMD} glide nv -x | tr '\n\r' ' ')

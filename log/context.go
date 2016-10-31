@@ -48,6 +48,7 @@ type LogContext interface {
 type Logger interface {
 	SetOutput(out io.Writer)
 	SetLevel(level logrus.Level)
+	GetLevel() logrus.Level
 	SetFormatter(formatter logrus.Formatter)
 	AddHook(hook logrus.Hook)
 }

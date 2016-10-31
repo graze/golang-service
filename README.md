@@ -64,7 +64,7 @@ context.Err(err).Error("Failed to handle input request")
 time="2016-10-28T10:51:32Z" level=info msg="Recieved GET /path" tag="received_request" method=GET path=/path module="request_handler"
 ```
 
-### Modifying a contexts properties
+### Modifying a loggers properties
 
 ```go
 context := log.New()
@@ -74,6 +74,8 @@ context.SetOutput(os.Stdout)
 
 context.Debug("some debug output printed")
 ```
+
+`context` implements the `log.Logger` interface which includes `SetFormatter`, `SetLevel`, `SetOutput`, `GetLevel` and `AddHook`
 
 ```
 {"time":"2016-10-28T10:51:32Z","level":"debug","msg":"some debug output printed"}
