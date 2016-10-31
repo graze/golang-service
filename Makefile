@@ -23,6 +23,7 @@ doc: ## Build API documentation
 	${DOCKER_CMD} godoc github.com/graze/golang-service
 
 lint: ## Run gofmt and goimports in lint mode
+	echo $$(${DOCKER_CMD} glide nv -x | tr '\r' ' ')
 	! ${DOCKER_CMD} gofmt -d -s $$(${DOCKER_CMD} glide nv -x | tr '\r' ' ') | grep '^'
 	! ${DOCKER_CMD} goimports -d $$(${DOCKER_CMD} glide nv -x | tr '\r' ' ') | grep '^'
 
