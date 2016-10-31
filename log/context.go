@@ -33,11 +33,6 @@ type LogContext interface {
 	Merge(context LogContext) *Context
 	Get() F
 
-	SetOutput(out io.Writer)
-	SetLevel(level logrus.Level)
-	SetFormatter(formatter logrus.Formatter)
-	AddHook(hook logrus.Hook)
-
 	Debugf(format string, args ...interface{})
 	Infof(format string, args ...interface{})
 	Printf(format string, args ...interface{})
@@ -49,6 +44,15 @@ type LogContext interface {
 	Error(args ...interface{})
 }
 
+// Logger represents a struct that can modify the output of a log
+type Logger interface {
+	SetOutput(out io.Writer)
+	SetLevel(level logrus.Level)
+	SetFormatter(formatter logrus.Formatter)
+	AddHook(hook logrus.Hook)
+}
+
+// Context is a logging context that can be passed around
 type Context struct {
 	*logrus.Entry
 }
