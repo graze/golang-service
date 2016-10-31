@@ -11,6 +11,7 @@ env:
   - ver=alpine
 
 install:
+  - make build-cli
   - make install
 
 script:
