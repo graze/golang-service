@@ -195,7 +195,7 @@ func TestStructuredLogging(t *testing.T) {
 	for k, tc := range cases {
 		hook.Reset()
 		rec := httptest.NewRecorder()
-		responseLogger := &responseLogger{w: rec, Context: logger}
+		responseLogger := &responseLogger{w: rec, ContextEntry: logger}
 		writeStructuredLog(responseLogger, context, tc.request, *tc.request.URL, tc.timestamp, tc.duration, http.StatusOK, tc.size)
 		assert.Equal(t, 1, len(hook.Entries), "test %s - Has Log Entry", k)
 		assert.Equal(t, log.InfoLevel, hook.LastEntry().Level, "test %s - Has Log Level", k)

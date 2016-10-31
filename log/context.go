@@ -23,14 +23,17 @@ var (
 	envName    = "ENVIRONMENT"
 )
 
+// F is a shorthand for logrus.Fields so less text is required to be typed:
+//
+// 	log.With(log.F{"k":"v"})
 type F logrus.Fields
 
-// LogContext represents a Logging Context
-type LogContext interface {
-	With(fields F) *Context
-	Err(err error) *Context
-	Add(fields F) *Context
-	Merge(context LogContext) *Context
+// Context represents a Logging ContextEntry
+type Context interface {
+	With(fields F) *ContextEntry
+	Err(err error) *ContextEntry
+	Add(fields F) *ContextEntry
+	Merge(context Context) *ContextEntry
 	Get() F
 
 	Debugf(format string, args ...interface{})
@@ -53,43 +56,43 @@ type Logger interface {
 	AddHook(hook logrus.Hook)
 }
 
-// Context is a logging context that can be passed around
-type Context struct {
+// ContextEntry is a logging context that can be passed around
+type ContextEntry struct {
 	*logrus.Entry
 }
 
-// With creates a new `Context` and adds the fields to it
-func (c *Context) With(fields F) *Context {
+// With creates a new `ContextEntry` and adds the fields to it
+func (c *ContextEntry) With(fields F) *ContextEntry {
 	// type conversion of same type without refection
 	data := make(logrus.Fields, len(fields))
 	for k, v := range fields {
 		data[k] = v
 	}
 	entry := c.Entry.WithFields(data)
-	return &Context{entry}
+	return &ContextEntry{entry}
 }
 
-// Err adds an error and returns a new `Context`
-func (c *Context) Err(err error) *Context {
+// Err adds an error and returns a new `ContextEntry`
+func (c *ContextEntry) Err(err error) *ContextEntry {
 	entry := c.Entry.WithError(err)
-	return &Context{entry}
+	return &ContextEntry{entry}
 }
 
-// Add adds the fields to the current `Context` and returns itself
-func (c *Context) Add(fields F) *Context {
+// Add adds the fields to the current `ContextEntry` and returns itself
+func (c *ContextEntry) Add(fields F) *ContextEntry {
 	for k, v := range fields {
 		c.Entry.Data[k] = v
 	}
 	return c
 }
 
-// Merge will merge the fields in the supplied `context` into this `Context`
-func (c *Context) Merge(context LogContext) *Context {
+// Merge will merge the fields in the supplied `context` into this `ContextEntry`
+func (c *ContextEntry) Merge(context Context) *ContextEntry {
 	return c.Add(context.Get())
 }
 
 // Get will return the current fields attached to a context
-func (c *Context) Get() (fields F) {
+func (c *ContextEntry) Get() (fields F) {
 	fields = make(F, len(c.Entry.Data))
 	for k, v := range c.Entry.Data {
 		fields[k] = v
@@ -98,34 +101,34 @@ func (c *Context) Get() (fields F) {
 }
 
 // SetOutput changes the output of the current context
-func (c *Context) SetOutput(out io.Writer) {
+func (c *ContextEntry) SetOutput(out io.Writer) {
 	c.Logger.Out = out
 }
 
 // SetFormatter will change the formatter for the current context
-func (c *Context) SetFormatter(formatter logrus.Formatter) {
+func (c *ContextEntry) SetFormatter(formatter logrus.Formatter) {
 	c.Logger.Formatter = formatter
 }
 
 // SetLevel changes the default logging level of the current context
-func (c *Context) SetLevel(level logrus.Level) {
+func (c *ContextEntry) SetLevel(level logrus.Level) {
 	c.Logger.Level = level
 }
 
 // GetLevel returns the current logging level this context will log at
-func (c *Context) GetLevel() (level logrus.Level) {
+func (c *ContextEntry) GetLevel() (level logrus.Level) {
 	return c.Logger.Level
 }
 
 // AddHook will add a hook to the current context
-func (c *Context) AddHook(hook logrus.Hook) {
+func (c *ContextEntry) AddHook(hook logrus.Hook) {
 	c.Logger.Hooks.Add(hook)
 }
 
-// Create a new Context
-func New() (context *Context) {
+// New creates a new ContextEntry with a new Logger context (formatter, level, output, hooks)
+func New() (context *ContextEntry) {
 	base := logrus.New()
-	context = &Context{logrus.NewEntry(base)}
+	context = &ContextEntry{logrus.NewEntry(base)}
 	fields := make(F)
 	if app := os.Getenv(appName); app != "" {
 		fields["app"] = app

@@ -68,7 +68,7 @@ func StatsdIoHandler(out *statsd.Client, h http.Handler) http.Handler {
 	return statsdHandler{out, h}
 }
 
-// statsdHandler returns a handlers.StatsdHandler to write request and response informtion to statsd
+// StatsdHandler returns a handlers.StatsdHandler to write request and response informtion to statsd
 //
 // Usage:
 // 	r := mux.NewRouter()

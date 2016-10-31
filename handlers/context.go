@@ -17,7 +17,7 @@ import (
 )
 
 type logContextHandler struct {
-	logger  log.LogContext
+	logger  log.Context
 	handler http.Handler
 }
 
@@ -29,7 +29,7 @@ func (h logContextHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	context.Add(log.F{
 		"http.method":   req.Method,
 		"http.protocol": req.Proto,
-		"http.uri":      parseUri(req, url),
+		"http.uri":      parseURI(req, url),
 		"http.path":     uriPath(req, url),
 		"http.host":     req.Host,
 	})
@@ -49,7 +49,7 @@ func LogContextHandler(h http.Handler) http.Handler {
 	return logContextHandler{log.New(), h}
 }
 
-// LogContextHandler returns a handler that adds `http` and `transaction` items into the provided logging context
-func LoggingContextHandler(logger log.LogContext, h http.Handler) http.Handler {
+// LoggingContextHandler returns a handler that adds `http` and `transaction` items into the provided logging context
+func LoggingContextHandler(logger log.Context, h http.Handler) http.Handler {
 	return logContextHandler{logger.With(log.F{}), h}
 }

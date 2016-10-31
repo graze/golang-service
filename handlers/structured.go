@@ -19,7 +19,7 @@ import (
 )
 
 type structuredHandler struct {
-	context log.LogContext
+	context log.Context
 	handler http.Handler
 }
 
@@ -37,9 +37,9 @@ func (h structuredHandler) writeLog(w LoggingResponseWriter, req *http.Request, 
 // ts is the timestamp with wich the entry should be logged
 // dur is the time taken by the server to generate the response
 // status and size are used to provide response HTTP status and size
-func writeStructuredLog(w LoggingResponseWriter, context log.LogContext, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
+func writeStructuredLog(w LoggingResponseWriter, context log.Context, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
 	sDur := float64(dur.Nanoseconds()) / (float64(time.Second) / float64(time.Nanosecond))
-	uri := parseUri(req, url)
+	uri := parseURI(req, url)
 
 	w.GetContext().
 		With(context.Get()).
@@ -59,7 +59,7 @@ func writeStructuredLog(w LoggingResponseWriter, context log.LogContext, req *ht
 		}).Infof("%s %s %s", req.Method, uri, req.Proto)
 }
 
-// StructuredHandler return a http.Handler that wraps h and logs request to out in
+// StructuredLogHandler returns a http.Handler that wraps h and logs request to out in
 // a structured format that can be outputted in json or logfmt
 //
 // Example:
@@ -75,7 +75,7 @@ func writeStructuredLog(w LoggingResponseWriter, context log.LogContext, req *ht
 //		log.With(log.F{"module":"request.handler"})
 //		, r)
 //  http.ListenAndServe(":1123", loggedRouter)
-func StructuredLogHandler(context log.LogContext, h http.Handler) http.Handler {
+func StructuredLogHandler(context log.Context, h http.Handler) http.Handler {
 	return structuredHandler{context, h}
 }
 

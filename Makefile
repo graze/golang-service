@@ -5,11 +5,17 @@
 
 DOCKER_CMD=docker-compose run --rm local
 MOUNT=/go/src/github.com/graze/golang-service
+CODE=./handlers ./log ./metrics ./nettest
+
+build-cli: ## Build the local image
+	docker-compose build local
 
 install: ## Install the dependencies
+	rm -rf vendor
 	${DOCKER_CMD} glide install
 
 update: ## Update dependencies
+	rm -rf vendor
 	${DOCKER_CMD} glide update
 
 cli: ## Open a shell to the docker environment
@@ -17,18 +23,27 @@ cli: ## Open a shell to the docker environment
 
 test: ver ?= alpine
 test: ## Run the tests
-	docker run --rm -it -v $(PWD):${MOUNT} -w ${MOUNT} golang:${ver} go test $$(${DOCKER_CMD} glide nv -x | tr '\n\r' ' ')
+	docker run --rm -it -v $(PWD):${MOUNT} -w ${MOUNT} golang:${ver} go test ${CODE}
 
 doc: ## Build API documentation
 	${DOCKER_CMD} godoc github.com/graze/golang-service
 
 lint: ## Run gofmt and goimports in lint mode
-	${DOCKER_CMD} gofmt -d -e -s $$(${DOCKER_CMD} glide nv -x | tr '\n\r' ' ')
-	${DOCKER_CMD} goimports -d -e $$(${DOCKER_CMD} glide nv -x | tr '\n\r' ' ')
+	${DOCKER_CMD} golint -set_exit_status ./handlers/...
+	${DOCKER_CMD} golint -set_exit_status ./log/...
+	${DOCKER_CMD} golint -set_exit_status ./metrics/...
+	${DOCKER_CMD} golint -set_exit_status ./nettest/...
+	${DOCKER_CMD} golint -set_exit_status ./
 
 format: ## Run gofmt to format the code
-	${DOCKER_CMD} gofmt -s -w $$(${DOCKER_CMD} glide nv -x | tr '\n\r' ' ')
-	${DOCKER_CMD} goimports -w $$(${DOCKER_CMD} glide nv -x | tr '\n\r' ' ')
+	${DOCKER_CMD} gofmt -s -w ${CODE}
+	${DOCKER_CMD} goimports -w ${CODE}
+
+clean: ## Clean docker and git info
+	docker-compose stop
+	docker-compose rm -f
+	docker-compose down || echo "Cleaned"
+	git clean -d -f -f
 
 # Build targets
 .SILENT: help
