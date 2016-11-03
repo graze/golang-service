@@ -80,13 +80,13 @@ func Err(err error) *ContextEntry {
 	return logContext.Err(err)
 }
 
-// AddFields modifies the global context and returns itself
+// Add modifies the global context and returns itself
 func Add(fields KV) *ContextEntry {
 	logContext.Add(fields)
 	return logContext
 }
 
-// GetFields will return the current set of fields in the global context
+// Get will return the current set of fields in the global context
 func Get() KV {
 	return logContext.Get()
 }

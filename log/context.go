@@ -75,9 +75,8 @@ func (c *ContextEntry) NewContext(ctx context.Context) context.Context {
 func (c *ContextEntry) Ctx(ctx context.Context) *ContextEntry {
 	if contextLogger, ok := ctx.Value(logKey).(*ContextEntry); ok {
 		return c.Merge(contextLogger)
-	} else {
-		return c.With(KV{})
 	}
+	return c.With(KV{})
 }
 
 // With creates a new `ContextEntry` and adds the fields to it

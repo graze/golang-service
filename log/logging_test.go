@@ -11,6 +11,7 @@
 package log
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -50,6 +51,9 @@ func TestEnvironment(t *testing.T) {
 	assert.Equal(t, "some text", hook.LastEntry().Message)
 	assert.Equal(t, "some_app", hook.LastEntry().Data["app"])
 	assert.Equal(t, "test", hook.LastEntry().Data["env"])
+
+	os.Setenv("LOG_APPLICATION", "")
+	os.Setenv("ENVIRONMENT", "")
 }
 
 func TestGlobalConfiguration(t *testing.T) {
@@ -86,4 +90,22 @@ func TestModificationOfContextLogger(t *testing.T) {
 	assert.Equal(t, os.Stdout, logger.Logger.Out)
 	assert.Equal(t, DebugLevel, logger.Logger.Level)
 	assert.IsType(t, (*logrus.JSONFormatter)(nil), logger.Logger.Formatter)
+}
+
+func TestPassingAroundContext(t *testing.T) {
+	ctx := context.Background()
+
+	logger := Ctx(ctx).With(KV{"key": "value"})
+	assert.Equal(t, KV{"key": "value"}, logger.Get())
+
+	ctx = logger.NewContext(ctx)
+
+	logger = Ctx(ctx).With(KV{"key2": "value2"})
+	assert.Equal(t, KV{
+		"key":  "value",
+		"key2": "value2",
+	}, logger.Get())
+
+	other := New().Ctx(ctx)
+	assert.Equal(t, KV{"key": "value"}, other.Get())
 }
