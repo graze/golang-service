@@ -6,7 +6,6 @@ services:
   - docker
 
 env:
-  - ver=1.6-alpine
   - ver=1.7-alpine
   - ver=alpine
 
