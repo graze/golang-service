@@ -26,13 +26,13 @@ Setting these will mean any use of the global logging context or log.New() will 
 log.SetFormatter(&logrus.TextFormatter()) // default
 log.SetOutput(os.Stderr) // default
 log.SetLevel(log.InfoLevel) // default
-log.AddFields(log.F{"service":"super_service"}) // apply `service=super_service` to each log message
+log.AddFields(log.KV{"service":"super_service"}) // apply `service=super_service` to each log message
 ```
 
 ### logging using the global logger
 
 ```go
-log.With(log.F{
+log.With(log.KV{
     "module": "request_handler",
     "tag":    "received_request"
     "method": "GET",
@@ -49,10 +49,10 @@ time="2016-10-28T10:51:32Z" level=info msg="Received request" module="request_ha
 
 ```go
 context := log.New()
-context.Add(log.F{
+context.Add(log.KV{
     "module": "request_handler"
 })
-context.With(log.F{
+context.With(log.KV{
     "tag":    "received_request",
     "method": "GET",
     "path":   "/path"
@@ -102,7 +102,7 @@ r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
         context := log.New()
     }
 
-    context.With(log.F{"module":"get"}).Info("logging GET")
+    context.With(log.KV{"module":"get"}).Info("logging GET")
 }
 
 http.ListenAndServe(":1234", handlers.LogContextHandler(r))
@@ -180,7 +180,7 @@ r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("This is a catch-all route"))
 })
 loggedRouter := handlers.StructuredLogHandler(
-    log.With(log.F{"module":"request.handler"}),
+    log.With(log.KV{"module":"request.handler"}),
     r)
 http.ListenAndServe(":1123", loggedRouter)
 ```

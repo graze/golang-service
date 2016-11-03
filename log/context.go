@@ -11,6 +11,7 @@
 package log
 
 import (
+	"context"
 	"io"
 	"os"
 
@@ -23,18 +24,22 @@ var (
 	envName    = "ENVIRONMENT"
 )
 
-// F is a shorthand for logrus.Fields so less text is required to be typed:
+// KV is a shorthand for logrus.Fields so less text is required to be typed:
 //
-// 	log.With(log.F{"k":"v"})
-type F logrus.Fields
+// 	log.With(log.KV{"k":"v"})
+type KV logrus.Fields
 
-// Context represents a Logging ContextEntry
+// Context represents a Logging Context
 type Context interface {
-	With(fields F) *ContextEntry
+	Ctx(ctx context.Context) *ContextEntry
+	NewContext(ctx context.Context) context.Context
+
+	With(fields KV) *ContextEntry
 	Err(err error) *ContextEntry
-	Add(fields F) *ContextEntry
+
+	Add(fields KV) *ContextEntry
 	Merge(context Context) *ContextEntry
-	Get() F
+	Get() KV
 
 	Debugf(format string, args ...interface{})
 	Infof(format string, args ...interface{})
@@ -61,8 +66,22 @@ type ContextEntry struct {
 	*logrus.Entry
 }
 
+// NewContext returns the provided context with this ContextEntry added
+func (c *ContextEntry) NewContext(ctx context.Context) context.Context {
+	return context.WithValue(ctx, logKey, c)
+}
+
+// Ctx will use any logging context contained in context.Context to append to the current log context
+func (c *ContextEntry) Ctx(ctx context.Context) *ContextEntry {
+	if contextLogger, ok := ctx.Value(logKey).(*ContextEntry); ok {
+		return c.Merge(contextLogger)
+	} else {
+		return c.With(KV{})
+	}
+}
+
 // With creates a new `ContextEntry` and adds the fields to it
-func (c *ContextEntry) With(fields F) *ContextEntry {
+func (c *ContextEntry) With(fields KV) *ContextEntry {
 	// type conversion of same type without refection
 	data := make(logrus.Fields, len(fields))
 	for k, v := range fields {
@@ -79,7 +98,7 @@ func (c *ContextEntry) Err(err error) *ContextEntry {
 }
 
 // Add adds the fields to the current `ContextEntry` and returns itself
-func (c *ContextEntry) Add(fields F) *ContextEntry {
+func (c *ContextEntry) Add(fields KV) *ContextEntry {
 	for k, v := range fields {
 		c.Entry.Data[k] = v
 	}
@@ -92,8 +111,8 @@ func (c *ContextEntry) Merge(context Context) *ContextEntry {
 }
 
 // Get will return the current fields attached to a context
-func (c *ContextEntry) Get() (fields F) {
-	fields = make(F, len(c.Entry.Data))
+func (c *ContextEntry) Get() (fields KV) {
+	fields = make(KV, len(c.Entry.Data))
 	for k, v := range c.Entry.Data {
 		fields[k] = v
 	}
@@ -129,7 +148,7 @@ func (c *ContextEntry) AddHook(hook logrus.Hook) {
 func New() (context *ContextEntry) {
 	base := logrus.New()
 	context = &ContextEntry{logrus.NewEntry(base)}
-	fields := make(F)
+	fields := make(KV)
 	if app := os.Getenv(appName); app != "" {
 		fields["app"] = app
 	}

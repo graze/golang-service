@@ -64,7 +64,7 @@ func TestGlobalConfiguration(t *testing.T) {
 	assert.Equal(t, InfoLevel, logger.Logger.Level)
 	assert.IsType(t, (*logrus.TextFormatter)(nil), logger.Logger.Formatter)
 
-	context := With(F{})
+	context := With(KV{})
 
 	assert.Equal(t, os.Stdout, context.Logger.Out)
 	assert.Equal(t, DebugLevel, context.Logger.Level)

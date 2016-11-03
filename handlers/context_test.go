@@ -16,7 +16,7 @@ import (
 	"net/url"
 	"testing"
 
-	log "github.com/graze/golang-service/log"
+	"github.com/graze/golang-service/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -94,22 +94,14 @@ func TestContextUpdatesTheRequestContext(t *testing.T) {
 
 	for k, tc := range cases {
 		beforeHandler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			if logger, ok := w.(LoggingResponseWriter); ok {
-				context := logger.GetContext()
-				if entry, ok := context.(*log.ContextEntry); ok {
-					for f, v := range tc.expected {
-						assert.Contains(t, entry.Data, f, "test %s - Has Field: %s", k, f)
-						assert.Equal(t, v, entry.Data[f], "test %s - Field: %s", k, f)
-					}
-					for f, v := range tc.regex {
-						assert.Contains(t, entry.Data, f, "test %s - Has Field: %s", k, f)
-						assert.Regexp(t, v, entry.Data[f], "test %s - Field: %s", k, f)
-					}
-				} else {
-					t.Error("logger.GetContext() should implement (*log.ContextEntry)")
-				}
-			} else {
-				t.Error("http.ResponseWriter should implement LoggingResponseWriter")
+			entry := log.FromContext(req.Context())
+			for f, v := range tc.expected {
+				assert.Contains(t, entry.Data, f, "test %s - Has Field: %s", k, f)
+				assert.Equal(t, v, entry.Data[f], "test %s - Field: %s", k, f)
+			}
+			for f, v := range tc.regex {
+				assert.Contains(t, entry.Data, f, "test %s - Has Field: %s", k, f)
+				assert.Regexp(t, v, entry.Data[f], "test %s - Field: %s", k, f)
 			}
 			w.Write([]byte("ok\n"))
 		})

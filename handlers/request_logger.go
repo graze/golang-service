@@ -12,20 +12,19 @@ package handlers
 
 import (
 	"bufio"
+	"fmt"
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
-
-	log "github.com/graze/golang-service/log"
-	"github.com/twinj/uuid"
 )
 
 // LogServeHTTP creates a LoggingResponseWriter from `w` if applicable and calls `caller` with the request status, size,
 // time and duration
 func LogServeHTTP(w http.ResponseWriter, req *http.Request, handler http.Handler, caller func(w LoggingResponseWriter, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int)) {
 	t := time.Now().UTC()
-	logger := MakeLogger(w, log.With(log.F{}))
+	logger := MakeLogger(w)
 	url := *req.URL
 	handler.ServeHTTP(logger, req)
 	dur := time.Now().UTC().Sub(t)
@@ -35,23 +34,14 @@ func LogServeHTTP(w http.ResponseWriter, req *http.Request, handler http.Handler
 // MakeLogger creates a LoggingResponseWriter from a http.ResponseWriter
 //
 // The loggingResponsWriter adds status field and the size of the response to the LoggingResponseWriter
-func MakeLogger(w http.ResponseWriter, context log.Context) LoggingResponseWriter {
+func MakeLogger(w http.ResponseWriter) LoggingResponseWriter {
 	if logResponse, ok := w.(LoggingResponseWriter); ok {
 		return logResponse
 	}
 
-	context.Add(log.F{
-		"transaction": uuid.NewV4(),
-	})
-	var logger LoggingResponseWriter = &responseLogger{
-		w:            w,
-		ContextEntry: context,
-	}
+	var logger LoggingResponseWriter = &responseLogger{w: w}
 	if _, ok := w.(http.Hijacker); ok {
-		logger = &hijackLogger{responseLogger{
-			w:            w,
-			ContextEntry: context,
-		}}
+		logger = &hijackLogger{responseLogger{w: w}}
 	}
 	h, ok1 := logger.(http.Hijacker)
 	c, ok2 := w.(http.CloseNotifier)
@@ -70,21 +60,14 @@ type LoggingResponseWriter interface {
 	http.Flusher
 	Status() int
 	Size() int
-	GetContext() log.Context
 }
 
 // responseLogger is wrapper of http.ResponseWriter that keeps track of its HTTP
 // status code and body size
 type responseLogger struct {
-	w            http.ResponseWriter
-	ContextEntry log.Context
-	status       int
-	size         int
-}
-
-// GetContext gets the current logging context for this http request
-func (l *responseLogger) GetContext() log.Context {
-	return l.ContextEntry
+	w      http.ResponseWriter
+	status int
+	size   int
 }
 
 func (l *responseLogger) Header() http.Header {
@@ -185,4 +168,28 @@ func uriPath(req *http.Request, url url.URL) (uri string) {
 		uri = "/"
 	}
 	return
+}
+
+// getUserIP takes a request and extracts the users ip, using `X-Forwarded-For` and `X-Real-Ip` headers
+// then the `req.RemoteAddr`
+func getUserIP(req *http.Request) (net.IP, error) {
+	for _, h := range []string{"X-Forwarded-For", "X-Real-Ip"} {
+		for _, ip := range strings.Split(req.Header.Get(h), ",") {
+			// header can contain spaces too, strip those out.
+			userIP := net.ParseIP(strings.Replace(ip, " ", "", -1))
+			if userIP == nil {
+				return nil, fmt.Errorf("getUserIP: %q is not a valid IP", ip)
+			}
+			return userIP, nil
+		}
+	}
+	ip, _, err := net.SplitHostPort(req.RemoteAddr)
+	if err != nil {
+		return nil, fmt.Errorf("getUserIP: %q is not a valid IP:Port", req.RemoteAddr)
+	}
+	userIP := net.ParseIP(ip)
+	if userIP == nil {
+		return nil, fmt.Errorf("getUserIP: %q is not a valid IP:port", req.RemoteAddr)
+	}
+	return userIP, nil
 }

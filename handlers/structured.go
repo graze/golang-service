@@ -19,7 +19,7 @@ import (
 )
 
 type structuredHandler struct {
-	context log.Context
+	logger  log.Context
 	handler http.Handler
 }
 
@@ -30,33 +30,36 @@ func (h structuredHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 // writeLog writes a log entry to structuredHandler's logger
 func (h structuredHandler) writeLog(w LoggingResponseWriter, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
-	writeStructuredLog(w, h.context, req, url, ts, dur, status, size)
+	writeStructuredLog(w, h.logger.Ctx(req.Context()), req, url, ts, dur, status, size)
 }
 
 // writeStructuredLog writes a log entry for req to logger in a structured format for json/logfmt
 // ts is the timestamp with wich the entry should be logged
 // dur is the time taken by the server to generate the response
 // status and size are used to provide response HTTP status and size
-func writeStructuredLog(w LoggingResponseWriter, context log.Context, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
+func writeStructuredLog(w LoggingResponseWriter, logger log.Context, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
 	sDur := float64(dur.Nanoseconds()) / (float64(time.Second) / float64(time.Nanosecond))
 	uri := parseURI(req, url)
+	ip := ""
+	if userIP, err := getUserIP(req); err == nil {
+		ip = userIP.String()
+	}
 
-	w.GetContext().
-		With(context.Get()).
-		With(log.F{
-			"tag":           "request_handled",
-			"http.method":   req.Method,
-			"http.protocol": req.Proto,
-			"http.uri":      uri,
-			"http.path":     uriPath(req, url),
-			"http.host":     req.Host,
-			"http.status":   status,
-			"http.bytes":    size,
-			"dur":           sDur,
-			"ts":            ts.Format(time.RFC3339Nano),
-			"http.ref":      req.Referer(),
-			"http.user":     req.Header.Get("X-Forwarded-For"),
-		}).Infof("%s %s %s", req.Method, uri, req.Proto)
+	logger.With(log.KV{
+		"tag":             "request_handled",
+		"http.method":     req.Method,
+		"http.protocol":   req.Proto,
+		"http.uri":        uri,
+		"http.path":       uriPath(req, url),
+		"http.host":       req.Host,
+		"http.status":     status,
+		"http.bytes":      size,
+		"http.user":       ip,
+		"http.ref":        req.Referer(),
+		"http.user-agent": req.Header.Get("User-Agent"),
+		"dur":             sDur,
+		"ts":              ts.Format(time.RFC3339Nano),
+	}).Infof("%s %s %s", req.Method, uri, req.Proto)
 }
 
 // StructuredLogHandler returns a http.Handler that wraps h and logs request to out in
@@ -70,13 +73,13 @@ func writeStructuredLog(w LoggingResponseWriter, context log.Context, req *http.
 //  })
 //  context := log.New()
 //	context.SetFormatter(&logrus.JSONFormatter{})
-//	context.Add(log.F{"module":"request.handler"})
+//	context.Add(log.KV{"module":"request.handler"})
 //  loggedRouter := handlers.StructuredLogHandler(
-//		log.With(log.F{"module":"request.handler"})
+//		log.With(log.KV{"module":"request.handler"})
 //		, r)
 //  http.ListenAndServe(":1123", loggedRouter)
-func StructuredLogHandler(context log.Context, h http.Handler) http.Handler {
-	return structuredHandler{context, h}
+func StructuredLogHandler(logger log.Context, h http.Handler) http.Handler {
+	return structuredHandler{logger, h}
 }
 
 // StructuredHandler returns an opinionated structuredHandler using the standard logger
@@ -92,8 +95,8 @@ func StructuredLogHandler(context log.Context, h http.Handler) http.Handler {
 //  http.ListenAndServe(":1123", loggedRouter)
 //
 func StructuredHandler(h http.Handler) http.Handler {
-	context := log.With(log.F{
+	logger := log.With(log.KV{
 		"module": "request.handler",
 	})
-	return structuredHandler{context, h}
+	return structuredHandler{logger, h}
 }
