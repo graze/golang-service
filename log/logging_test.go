@@ -109,3 +109,14 @@ func TestPassingAroundContext(t *testing.T) {
 	other := New().Ctx(ctx)
 	assert.Equal(t, KV{"key": "value"}, other.Get())
 }
+
+func TestUsingContextWithGlobalLogWillNotModifyTheGlobalState(t *testing.T) {
+	ctx := context.Background()
+
+	ctx = With(KV{"key": "value"}).NewContext(ctx)
+
+	logger1 := Ctx(ctx)
+	assert.Equal(t, KV{"key": "value"}, logger1.Get())
+
+	assert.Equal(t, KV{}, Get())
+}

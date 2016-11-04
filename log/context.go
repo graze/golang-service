@@ -74,7 +74,7 @@ func (c *ContextEntry) NewContext(ctx context.Context) context.Context {
 // Ctx will use any logging context contained in context.Context to append to the current log context
 func (c *ContextEntry) Ctx(ctx context.Context) *ContextEntry {
 	if contextLogger, ok := ctx.Value(logKey).(*ContextEntry); ok {
-		return c.Merge(contextLogger)
+		return c.With(contextLogger.Get())
 	}
 	return c.With(KV{})
 }
