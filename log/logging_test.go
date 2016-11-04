@@ -120,3 +120,17 @@ func TestUsingContextWithGlobalLogWillNotModifyTheGlobalState(t *testing.T) {
 
 	assert.Equal(t, KV{}, Get())
 }
+
+func TestTheContextContainsAPointerToTheLogger(t *testing.T) {
+	ctx := context.Background()
+
+	logger := With(KV{"key": "value"})
+	ctx = logger.NewContext(ctx)
+
+	logger.Add(KV{"key2": "value2"})
+
+	assert.Equal(t, KV{
+		"key":  "value",
+		"key2": "value2",
+	}, Ctx(ctx).Get())
+}
