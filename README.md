@@ -45,37 +45,71 @@ Example:
 time="2016-10-28T10:51:32Z" level=info msg="Received request" module="request_handler" tag="received_request" method=GET path=/path service="super_service"
 ```
 
-### Log using context logger
+### Log using a local field store
 
 ```go
-context := log.New()
-context.Add(log.KV{
+logger := log.New()
+logger.Add(log.KV{
     "module": "request_handler"
 })
-context.With(log.KV{
+logger.With(log.KV{
     "tag":    "received_request",
     "method": "GET",
     "path":   "/path"
 }).Info("Received GET /path")
-context.Err(err).Error("Failed to handle input request")
+logger.Err(err).Error("Failed to handle input request")
 ```
 
 ```
-time="2016-10-28T10:51:32Z" level=info msg="Recieved GET /path" tag="received_request" method=GET path=/path module="request_handler"
+time="2016-10-28T10:51:32Z" level=info msg="Received GET /path" tag="received_request" method=GET path=/path module="request_handler"
+```
+
+### Log using a context
+
+The logger can use golang's context to pass around fields
+
+```go
+logger := log.New()
+logger.Add(log.KV{"module": "request_handler"})
+context := logger.NewContext(context.Background())
+log.Ctx(context).
+    With(log.KV{"tag": "received_request"}).
+    Info("Received request")
+```
+
+```
+time="2016-10-28T10:51:32Z" level=info msg="Received request" tag="received_request" module="request_handler"
+```
+
+The context can be applied to another local logger
+
+```go
+logger := log.New()
+logger.Add(log.KV{"module": "request_handler"})
+context := logger.NewContext(context.Background())
+
+logger2 := log.New()
+logger2.SetOutput(os.Stderr)
+logger2.Add(log.KV{"tag": "received_request"})
+logger2.Ctx(context).Info("Received request")
+```
+
+```
+time="2016-10-28T10:51:32Z" level=info msg="Received request" tag="received_request" module="request_handler"
 ```
 
 ### Modifying a loggers properties
 
 ```go
-context := log.New()
-context.SetFormatter(&logrus.JSONFormatter{})
-context.SetLevel(log.DebugLevel)
-context.SetOutput(os.Stdout)
+logger := log.New()
+logger.SetFormatter(&logrus.JSONFormatter{})
+logger.SetLevel(log.DebugLevel)
+logger.SetOutput(os.Stdout)
 
-context.Debug("some debug output printed")
+logger.Debug("some debug output printed")
 ```
 
-`context` implements the `log.Logger` interface which includes `SetFormatter`, `SetLevel`, `SetOutput`, `GetLevel` and `AddHook`
+`logger` implements the `log.Logger` interface which includes `SetFormatter`, `SetLevel`, `SetOutput`, `Level` and `AddHook`
 
 ```
 {"time":"2016-10-28T10:51:32Z","level":"debug","msg":"some debug output printed"}
@@ -91,18 +125,14 @@ $ go get github.com/graze/golang-service/handlers
 
 ### Context Adder
 
-Adds context to the responseWriter so it can be accessed from within a method.
+`log` a logging context is stored within the request context.
 
 ```go
 r := mux.NewRouter()
 r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-    if logResponse, ok := w.(handlers.LoggingResponseWriter); ok {
-        context := logResponse.GetContext()
-    } else {
-        context := log.New()
-    }
+    ctx := r.Context()
 
-    context.With(log.KV{"module":"get"}).Info("logging GET")
+    log.Ctx(ctx).With(log.KV{"module":"get"}).Info("logging GET")
 }
 
 http.ListenAndServe(":1234", handlers.LogContextHandler(r))

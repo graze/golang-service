@@ -43,11 +43,11 @@ func TestMergeContext(t *testing.T) {
 	context2 := New()
 	context2.Add(KV{"test2": 2})
 
-	assert.Equal(t, KV{"test": 1}, context.Get())
-	assert.Equal(t, KV{"test2": 2}, context2.Get())
+	assert.Equal(t, KV{"test": 1}, context.Fields())
+	assert.Equal(t, KV{"test2": 2}, context2.Fields())
 
 	assert.Exactly(t, context, context.Merge(context2))
-	assert.Equal(t, KV{"test": 1, "test2": 2}, context.Get())
+	assert.Equal(t, KV{"test": 1, "test2": 2}, context.Fields())
 }
 
 func testImplements(t *testing.T) {

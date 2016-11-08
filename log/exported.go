@@ -59,9 +59,9 @@ func SetLevel(level logrus.Level) {
 	logContext.SetLevel(level)
 }
 
-// GetLevel returns the standard logger level.
-func GetLevel() logrus.Level {
-	return logContext.GetLevel()
+// Level returns the standard logger level.
+func Level() logrus.Level {
+	return logContext.Level()
 }
 
 // AddHook adds a new hook to the global logging context
@@ -86,9 +86,9 @@ func Add(fields KV) *ContextEntry {
 	return logContext
 }
 
-// Get will return the current set of fields in the global context
-func Get() KV {
-	return logContext.Get()
+// Fields will return the current set of fields in the global context
+func Fields() KV {
+	return logContext.Fields()
 }
 
 // Ctx will use the provided context with its logs if applicable

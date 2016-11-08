@@ -39,7 +39,7 @@ type Context interface {
 
 	Add(fields KV) *ContextEntry
 	Merge(context Context) *ContextEntry
-	Get() KV
+	Fields() KV
 
 	Debugf(format string, args ...interface{})
 	Infof(format string, args ...interface{})
@@ -74,7 +74,7 @@ func (c *ContextEntry) NewContext(ctx context.Context) context.Context {
 // Ctx will use any logging context contained in context.Context to append to the current log context
 func (c *ContextEntry) Ctx(ctx context.Context) *ContextEntry {
 	if contextLogger, ok := ctx.Value(logKey).(*ContextEntry); ok {
-		return c.With(contextLogger.Get())
+		return c.With(contextLogger.Fields())
 	}
 	return c.With(KV{})
 }
@@ -106,11 +106,11 @@ func (c *ContextEntry) Add(fields KV) *ContextEntry {
 
 // Merge will merge the fields in the supplied `context` into this `ContextEntry`
 func (c *ContextEntry) Merge(context Context) *ContextEntry {
-	return c.Add(context.Get())
+	return c.Add(context.Fields())
 }
 
-// Get will return the current fields attached to a context
-func (c *ContextEntry) Get() (fields KV) {
+// Fields will return the current fields attached to a context
+func (c *ContextEntry) Fields() (fields KV) {
 	fields = make(KV, len(c.Entry.Data))
 	for k, v := range c.Entry.Data {
 		fields[k] = v
@@ -133,8 +133,8 @@ func (c *ContextEntry) SetLevel(level logrus.Level) {
 	c.Logger.Level = level
 }
 
-// GetLevel returns the current logging level this context will log at
-func (c *ContextEntry) GetLevel() (level logrus.Level) {
+// Level returns the current logging level this context will log at
+func (c *ContextEntry) Level() (level logrus.Level) {
 	return c.Logger.Level
 }
 

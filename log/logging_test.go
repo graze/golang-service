@@ -96,7 +96,7 @@ func TestPassingAroundContext(t *testing.T) {
 	ctx := context.Background()
 
 	logger := Ctx(ctx).With(KV{"key": "value"})
-	assert.Equal(t, KV{"key": "value"}, logger.Get())
+	assert.Equal(t, KV{"key": "value"}, logger.Fields())
 
 	ctx = logger.NewContext(ctx)
 
@@ -104,10 +104,10 @@ func TestPassingAroundContext(t *testing.T) {
 	assert.Equal(t, KV{
 		"key":  "value",
 		"key2": "value2",
-	}, logger.Get())
+	}, logger.Fields())
 
 	other := New().Ctx(ctx)
-	assert.Equal(t, KV{"key": "value"}, other.Get())
+	assert.Equal(t, KV{"key": "value"}, other.Fields())
 }
 
 func TestUsingContextWithGlobalLogWillNotModifyTheGlobalState(t *testing.T) {
@@ -116,9 +116,9 @@ func TestUsingContextWithGlobalLogWillNotModifyTheGlobalState(t *testing.T) {
 	ctx = With(KV{"key": "value"}).NewContext(ctx)
 
 	logger1 := Ctx(ctx)
-	assert.Equal(t, KV{"key": "value"}, logger1.Get())
+	assert.Equal(t, KV{"key": "value"}, logger1.Fields())
 
-	assert.Equal(t, KV{}, Get())
+	assert.Equal(t, KV{}, Fields())
 }
 
 func TestTheContextContainsAPointerToTheLogger(t *testing.T) {
@@ -132,5 +132,5 @@ func TestTheContextContainsAPointerToTheLogger(t *testing.T) {
 	assert.Equal(t, KV{
 		"key":  "value",
 		"key2": "value2",
-	}, Ctx(ctx).Get())
+	}, Ctx(ctx).Fields())
 }
