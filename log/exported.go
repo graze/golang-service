@@ -11,6 +11,7 @@
 package log
 
 import (
+	"context"
 	"io"
 
 	"github.com/Sirupsen/logrus"
@@ -37,6 +38,12 @@ const (
 	DebugLevel
 )
 
+// key is a type to ensure unique key for context
+type key int
+
+// LogKey is the key used for context
+const logKey key = 0
+
 // SetOutput sets the standard logger output.
 func SetOutput(out io.Writer) {
 	logContext.SetOutput(out)
@@ -52,9 +59,9 @@ func SetLevel(level logrus.Level) {
 	logContext.SetLevel(level)
 }
 
-// GetLevel returns the standard logger level.
-func GetLevel() logrus.Level {
-	return logContext.GetLevel()
+// Level returns the standard logger level.
+func Level() logrus.Level {
+	return logContext.Level()
 }
 
 // AddHook adds a new hook to the global logging context
@@ -63,7 +70,7 @@ func AddHook(hook logrus.Hook) {
 }
 
 // With returns a new ContextEntry with the supplied fields
-func With(fields F) *ContextEntry {
+func With(fields KV) *ContextEntry {
 	return logContext.With(fields)
 }
 
@@ -73,15 +80,25 @@ func Err(err error) *ContextEntry {
 	return logContext.Err(err)
 }
 
-// AddFields modifies the global context and returns itself
-func AddFields(fields F) *ContextEntry {
+// Add modifies the global context and returns itself
+func Add(fields KV) *ContextEntry {
 	logContext.Add(fields)
 	return logContext
 }
 
-// GetFields will return the current set of fields in the global context
-func GetFields() F {
-	return logContext.Get()
+// Fields will return the current set of fields in the global context
+func Fields() KV {
+	return logContext.Fields()
+}
+
+// Ctx will use the provided context with its logs if applicable
+func Ctx(ctx context.Context) *ContextEntry {
+	return logContext.Ctx(ctx)
+}
+
+// NewContext adds the current `logContext` into `ctx`
+func NewContext(ctx context.Context) context.Context {
+	return logContext.NewContext(ctx)
 }
 
 // Debug logs a message at level Debug on the standard logger.

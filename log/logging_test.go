@@ -11,6 +11,7 @@
 package log
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -50,6 +51,9 @@ func TestEnvironment(t *testing.T) {
 	assert.Equal(t, "some text", hook.LastEntry().Message)
 	assert.Equal(t, "some_app", hook.LastEntry().Data["app"])
 	assert.Equal(t, "test", hook.LastEntry().Data["env"])
+
+	os.Setenv("LOG_APPLICATION", "")
+	os.Setenv("ENVIRONMENT", "")
 }
 
 func TestGlobalConfiguration(t *testing.T) {
@@ -64,7 +68,7 @@ func TestGlobalConfiguration(t *testing.T) {
 	assert.Equal(t, InfoLevel, logger.Logger.Level)
 	assert.IsType(t, (*logrus.TextFormatter)(nil), logger.Logger.Formatter)
 
-	context := With(F{})
+	context := With(KV{})
 
 	assert.Equal(t, os.Stdout, context.Logger.Out)
 	assert.Equal(t, DebugLevel, context.Logger.Level)
@@ -86,4 +90,47 @@ func TestModificationOfContextLogger(t *testing.T) {
 	assert.Equal(t, os.Stdout, logger.Logger.Out)
 	assert.Equal(t, DebugLevel, logger.Logger.Level)
 	assert.IsType(t, (*logrus.JSONFormatter)(nil), logger.Logger.Formatter)
+}
+
+func TestPassingAroundContext(t *testing.T) {
+	ctx := context.Background()
+
+	logger := Ctx(ctx).With(KV{"key": "value"})
+	assert.Equal(t, KV{"key": "value"}, logger.Fields())
+
+	ctx = logger.NewContext(ctx)
+
+	logger = Ctx(ctx).With(KV{"key2": "value2"})
+	assert.Equal(t, KV{
+		"key":  "value",
+		"key2": "value2",
+	}, logger.Fields())
+
+	other := New().Ctx(ctx)
+	assert.Equal(t, KV{"key": "value"}, other.Fields())
+}
+
+func TestUsingContextWithGlobalLogWillNotModifyTheGlobalState(t *testing.T) {
+	ctx := context.Background()
+
+	ctx = With(KV{"key": "value"}).NewContext(ctx)
+
+	logger1 := Ctx(ctx)
+	assert.Equal(t, KV{"key": "value"}, logger1.Fields())
+
+	assert.Equal(t, KV{}, Fields())
+}
+
+func TestTheContextContainsAPointerToTheLogger(t *testing.T) {
+	ctx := context.Background()
+
+	logger := With(KV{"key": "value"})
+	ctx = logger.NewContext(ctx)
+
+	logger.Add(KV{"key2": "value2"})
+
+	assert.Equal(t, KV{
+		"key":  "value",
+		"key2": "value2",
+	}, Ctx(ctx).Fields())
 }

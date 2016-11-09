@@ -80,7 +80,7 @@ Usage:
     	w.Write([]byte("This is a catch-all route"))
     })
     loggedRouter := handlers.StructuredLogHandler(
-        log.With(log.F{"module":"request.handler"}),
+        log.With(log.KV{"module":"request.handler"}),
         r)
     http.ListenAndServe(":1123", loggedRouter)
 
