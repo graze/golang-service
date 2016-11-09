@@ -21,7 +21,8 @@ import (
 )
 
 func TestLogging(t *testing.T) {
-	logger, hook := test.NewNullLogger()
+	logger := New()
+	hook := test.NewLocal(logger.Logger)
 
 	logger.Info("message")
 	assert.Equal(t, 1, len(hook.Entries))
@@ -30,9 +31,7 @@ func TestLogging(t *testing.T) {
 
 	hook.Reset()
 
-	logger.WithFields(logrus.Fields{
-		"variable": 2,
-	}).Error("some text")
+	logger.With(KV{"variable": 2}).Error("some text")
 	assert.Equal(t, 1, len(hook.Entries))
 	assert.Equal(t, "some text", hook.LastEntry().Message)
 	assert.Equal(t, ErrorLevel, hook.LastEntry().Level)
@@ -121,15 +120,15 @@ func TestUsingContextWithGlobalLogWillNotModifyTheGlobalState(t *testing.T) {
 	assert.Equal(t, KV{}, Fields())
 }
 
-func TestTheContextContainsAPointerToTheLogger(t *testing.T) {
+func TestTheContextDoesNotContainAPointerToTheLogger(t *testing.T) {
 	ctx := context.Background()
 
 	logger := With(KV{"key": "value"})
 	ctx = logger.NewContext(ctx)
 
-	logger.Add(KV{"key2": "value2"})
+	logger = logger.With(KV{"key2": "value2"})
 
-	assert.Equal(t, KV{
+	assert.NotEqual(t, KV{
 		"key":  "value",
 		"key2": "value2",
 	}, Ctx(ctx).Fields())

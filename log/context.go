@@ -37,8 +37,6 @@ type Context interface {
 	With(fields KV) *ContextEntry
 	Err(err error) *ContextEntry
 
-	Add(fields KV) *ContextEntry
-	Merge(context Context) *ContextEntry
 	Fields() KV
 
 	Debugf(format string, args ...interface{})
@@ -56,7 +54,7 @@ type Context interface {
 type Logger interface {
 	SetOutput(out io.Writer)
 	SetLevel(level logrus.Level)
-	GetLevel() logrus.Level
+	Level() logrus.Level
 	SetFormatter(formatter logrus.Formatter)
 	AddHook(hook logrus.Hook)
 }
@@ -68,13 +66,13 @@ type ContextEntry struct {
 
 // NewContext returns the provided context with this ContextEntry added
 func (c *ContextEntry) NewContext(ctx context.Context) context.Context {
-	return context.WithValue(ctx, logKey, c)
+	return context.WithValue(ctx, logKey, c.Fields())
 }
 
 // Ctx will use any logging context contained in context.Context to append to the current log context
 func (c *ContextEntry) Ctx(ctx context.Context) *ContextEntry {
-	if contextLogger, ok := ctx.Value(logKey).(*ContextEntry); ok {
-		return c.With(contextLogger.Fields())
+	if fields, ok := ctx.Value(logKey).(KV); ok {
+		return c.With(fields)
 	}
 	return c.With(KV{})
 }
@@ -94,19 +92,6 @@ func (c *ContextEntry) With(fields KV) *ContextEntry {
 func (c *ContextEntry) Err(err error) *ContextEntry {
 	entry := c.Entry.WithError(err)
 	return &ContextEntry{entry}
-}
-
-// Add adds the fields to the current `ContextEntry` and returns itself
-func (c *ContextEntry) Add(fields KV) *ContextEntry {
-	for k, v := range fields {
-		c.Entry.Data[k] = v
-	}
-	return c
-}
-
-// Merge will merge the fields in the supplied `context` into this `ContextEntry`
-func (c *ContextEntry) Merge(context Context) *ContextEntry {
-	return c.Add(context.Fields())
 }
 
 // Fields will return the current fields attached to a context
@@ -154,6 +139,6 @@ func New() (context *ContextEntry) {
 	if env := os.Getenv(envName); env != "" {
 		fields["env"] = env
 	}
-	context.Add(fields)
+	context = context.With(fields)
 	return
 }

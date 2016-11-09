@@ -220,8 +220,7 @@ func TestStructuredLogging(t *testing.T) {
 		},
 	}
 
-	logger := log.New()
-	logger.Add(log.KV{"transaction": "test-123"})
+	logger := log.New().With(log.KV{"transaction": "test-123"})
 	hook := test.NewLocal(logger.Logger)
 	context := logger.With(log.KV{"module": "request.handler"})
 
