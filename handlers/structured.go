@@ -19,7 +19,7 @@ import (
 )
 
 type structuredHandler struct {
-	logger  log.Context
+	logger  log.FieldLogger
 	handler http.Handler
 }
 
@@ -37,7 +37,7 @@ func (h structuredHandler) writeLog(w LoggingResponseWriter, req *http.Request, 
 // ts is the timestamp with wich the entry should be logged
 // dur is the time taken by the server to generate the response
 // status and size are used to provide response HTTP status and size
-func writeStructuredLog(w LoggingResponseWriter, logger log.Context, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
+func writeStructuredLog(w LoggingResponseWriter, logger log.FieldLogger, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
 	uri := parseURI(req, url)
 	ip := ""
 	if userIP, err := getUserIP(req); err == nil {
@@ -70,14 +70,13 @@ func writeStructuredLog(w LoggingResponseWriter, logger log.Context, req *http.R
 //  r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 //  	w.Write([]byte("This is a catch-all route"))
 //  })
-//  context := log.New()
-//	context.SetFormatter(&logrus.JSONFormatter{})
-//	context.Add(log.KV{"module":"request.handler"})
+//  logger := log.New()
+//	logger.SetFormatter(&logrus.JSONFormatter{})
 //  loggedRouter := handlers.StructuredLogHandler(
-//		log.With(log.KV{"module":"request.handler"})
+//		logger.With(log.KV{"module":"request.handler"})
 //		, r)
 //  http.ListenAndServe(":1123", loggedRouter)
-func StructuredLogHandler(logger log.Context, h http.Handler) http.Handler {
+func StructuredLogHandler(logger log.FieldLogger, h http.Handler) http.Handler {
 	return structuredHandler{logger, h}
 }
 

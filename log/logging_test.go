@@ -67,11 +67,11 @@ func TestGlobalConfiguration(t *testing.T) {
 	assert.Equal(t, InfoLevel, logger.Logger.Level)
 	assert.IsType(t, (*logrus.TextFormatter)(nil), logger.Logger.Formatter)
 
-	context := With(KV{})
+	logger2 := With(KV{})
 
-	assert.Equal(t, os.Stdout, context.Logger.Out)
-	assert.Equal(t, DebugLevel, context.Logger.Level)
-	assert.IsType(t, (*logrus.JSONFormatter)(nil), context.Logger.Formatter)
+	assert.Equal(t, os.Stdout, logger2.Logger.Out)
+	assert.Equal(t, DebugLevel, logger2.Logger.Level)
+	assert.IsType(t, (*logrus.JSONFormatter)(nil), logger2.Logger.Formatter)
 }
 
 func TestModificationOfContextLogger(t *testing.T) {

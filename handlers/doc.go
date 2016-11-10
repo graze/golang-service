@@ -27,11 +27,18 @@ Usage:
 They can also be manually chained together
     loggedRouter := handlers.StatsdHandler(handlers.HealthdHandler(r))
 
-Logging ContextEntry
+Logging Context
 
 This creates a logging context to be passed into the handling function with information about the request
 
 Usage:
+    r := mux.NewRouter()
+    r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        log.Ctx(r.Context()).Info("log a message with the context")
+        w.Write([]byte("This is a catch-all route"))
+    })
+    loggedRouter := handlers.LogContextHandler(r)
+    http.ListenAndServe(":1123", loggedRouter)
 
 Healthd
 

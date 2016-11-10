@@ -76,9 +76,9 @@ This logger supports golang's `Context`. You can create a new context and use an
 
     logger := log.New()
     logger.Add(log.KV{"key":"value"})
-    context := logger.NewContext(context.Background())
+    ctx := logger.NewContext(context.Background())
 
-    log.Ctx(context).Info("text")
+    log.Ctx(ctx).Info("text")
 
     // key=value level=info msg=text
 
@@ -86,11 +86,11 @@ You can use a logging context stored within a `context.Context` with a second lo
 
     logger := log.New()
     logger.Add(log.KV{"key":"value"})
-    context := logger.NewContext(context.Background())
+    ctx := logger.NewContext(context.Background())
 
     logger2 := log.New()
     logger2.Add(log.KV{"key2":"value2"})
-    logger2.Ctx(context).Info("text")
+    logger2.Ctx(ctx).Info("text")
 
     // key=value key2=value2 level=info msg=text
 

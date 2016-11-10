@@ -2,15 +2,14 @@
 
 [![Build Status](https://travis-ci.org/graze/golang-service.svg?branch=master)](https://travis-ci.org/graze/golang-service)
 
-- [Log](#log) Structured Contextual logging
+- [Log](#log) Structured logging
 - [Handlers](#handlers) http request middleware to add logging (healthd, context, statsd, structured logs)
 - [Metrics](#metrics) send monitoring metrics to collectors (currently: stats)
 - [NetTest](#nettest) helpers for use when testing networks
 
 ## Log
 
-Handle global logging with context. Based on [logrus](https://github.com/Sirupsen/logrus)
-with an option to create a global context.
+Handle global logging with context. Based on [logrus](https://github.com/Sirupsen/logrus) incorporating golang's `context.context`
 
 It uses [logfmt](https://brandur.org/logfmt) by default but can also output `json` using a `&logrus.JSONFormatter()`
 
@@ -71,8 +70,8 @@ The logger can use golang's context to pass around fields
 ```go
 logger := log.New()
 logger.Add(log.KV{"module": "request_handler"})
-context := logger.NewContext(context.Background())
-log.Ctx(context).
+ctx := logger.NewContext(context.Background())
+log.Ctx(ctx).
     With(log.KV{"tag": "received_request"}).
     Info("Received request")
 ```
@@ -86,12 +85,12 @@ The context can be applied to another local logger
 ```go
 logger := log.New()
 logger.Add(log.KV{"module": "request_handler"})
-context := logger.NewContext(context.Background())
+ctx := logger.NewContext(context.Background())
 
 logger2 := log.New()
 logger2.SetOutput(os.Stderr)
 logger2.Add(log.KV{"tag": "received_request"})
-logger2.Ctx(context).Info("Received request")
+logger2.Ctx(ctx).Info("Received request")
 ```
 
 ```
