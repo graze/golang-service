@@ -112,12 +112,12 @@ func TestStatsdHandler(t *testing.T) {
 		expected []string
 	}{
 		"simple get": {newRequest("GET", "http://example.com"), []string{
-			"service.test.request.response_time:0.000000|ms|#tag1,tag2:value,endpoint:/,statusCode:200,method:GET,protocol:HTTP/1.1",
-			"service.test.request.count:1|c|#tag1,tag2:value,endpoint:/,statusCode:200,method:GET,protocol:HTTP/1.1",
+			`service\.test\.request\.response_time\:[0-9.]+\|ms\|\#tag1\,tag2\:value\,endpoint\:\/\,statusCode\:200\,method\:GET\,protocol\:HTTP\/1\.1`,
+			`service\.test\.request\.count\:1\|c\|\#tag1\,tag2\:value\,endpoint\:\/\,statusCode\:200\,method\:GET\,protocol\:HTTP\/1\.1`,
 		}},
 		"post removes fields": {newRequest("POST", "http://example.com/token?apid=1"), []string{
-			"service.test.request.response_time:0.000000|ms|#tag1,tag2:value,endpoint:/token,statusCode:200,method:POST,protocol:HTTP/1.1",
-			"service.test.request.count:1|c|#tag1,tag2:value,endpoint:/token,statusCode:200,method:POST,protocol:HTTP/1.1",
+			`service\.test\.request\.response_time\:[0-9.]+\|ms\|\#tag1\,tag2\:value\,endpoint\:\/token\,statusCode\:200\,method\:POST\,protocol\:HTTP\/1\.1`,
+			`service\.test\.request\.count\:1\|c\|\#tag1\,tag2\:value\,endpoint\:\/token\,statusCode\:200\,method\:POST\,protocol\:HTTP\/1\.1`,
 		}},
 	}
 
@@ -145,7 +145,7 @@ func TestStatsdHandler(t *testing.T) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 
 		for _, message := range tc.expected {
-			assert.Equal(t, message, <-done, "test: %s", k)
+			assert.Regexp(t, message, <-done, "test: %s", k)
 		}
 	}
 }

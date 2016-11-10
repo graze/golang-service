@@ -44,6 +44,7 @@ clean: ## Clean docker and git info
 	docker-compose rm -f
 	docker-compose down || echo "Cleaned"
 	git clean -d -f -f
+	rm -rf .glide
 
 # Build targets
 .SILENT: help

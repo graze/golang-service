@@ -123,7 +123,7 @@ func TestStructuredLogging(t *testing.T) {
 				ProtoMinor: 0,
 				URL:        &url.URL{Host: "www.example.com:443"},
 				Host:       "www.example.com:443",
-				RemoteAddr: "192.168.100.5",
+				RemoteAddr: "192.168.100.5:9843",
 			},
 			now,
 			getDuration(t, "0.927s"),
@@ -142,7 +142,7 @@ func TestStructuredLogging(t *testing.T) {
 				"dur":             0.927,
 				"ts":              now.Format(time.RFC3339Nano),
 				"http.ref":        "",
-				"http.user":       "",
+				"http.user":       "192.168.100.5",
 				"http.user-agent": "",
 			},
 		},
@@ -234,7 +234,11 @@ func TestStructuredLogging(t *testing.T) {
 		assert.Equal(t, tc.message, hook.LastEntry().Message, "test %s - Has Message", k)
 		for f, v := range tc.fields {
 			assert.Contains(t, hook.LastEntry().Data, f, "test %s - Has Field: %s", k, f)
-			assert.Equal(t, v, hook.LastEntry().Data[f], "test %s - Field: %s", k, f)
+			if _, ok := v.(float64); ok {
+				assert.InDelta(t, v, hook.LastEntry().Data[f], 0.0001, "test %s - Field: %s", k, f)
+			} else {
+				assert.Equal(t, v, hook.LastEntry().Data[f], "test %s - Field: %s", k, f)
+			}
 		}
 	}
 }
