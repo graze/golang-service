@@ -46,91 +46,96 @@ const logKey key = 0
 
 // SetOutput sets the standard logger output.
 func SetOutput(out io.Writer) {
-	logContext.SetOutput(out)
+	logEntry.SetOutput(out)
 }
 
 // SetFormatter sets the standard logger formatter.
 func SetFormatter(formatter logrus.Formatter) {
-	logContext.SetFormatter(formatter)
+	logEntry.SetFormatter(formatter)
 }
 
 // SetLevel sets the standard logger level.
 func SetLevel(level logrus.Level) {
-	logContext.SetLevel(level)
+	logEntry.SetLevel(level)
 }
 
 // Level returns the standard logger level.
 func Level() logrus.Level {
-	return logContext.Level()
+	return logEntry.Level()
 }
 
 // AddHook adds a new hook to the global logging context
 func AddHook(hook logrus.Hook) {
-	logContext.AddHook(hook)
+	logEntry.AddHook(hook)
 }
 
-// With returns a new ContextEntry with the supplied fields
-func With(fields KV) *ContextEntry {
-	return logContext.With(fields)
+// With returns a new LoggerEntry with the supplied fields
+func With(fields KV) *LoggerEntry {
+	return logEntry.With(fields)
 }
 
-// Err creates a new ContextEntry from the standard logger and adds an error
+// Err creates a new LoggerEntry from the standard logger and adds an error
 // to it, using the value defined in ErrorKey as key.
-func Err(err error) *ContextEntry {
-	return logContext.Err(err)
+func Err(err error) *LoggerEntry {
+	return logEntry.Err(err)
 }
 
 // Fields will return the current set of fields in the global context
 func Fields() KV {
-	return logContext.Fields()
+	return logEntry.Fields()
 }
 
 // Ctx will use the provided context with its logs if applicable
-func Ctx(ctx context.Context) *ContextEntry {
-	return logContext.Ctx(ctx)
+func Ctx(ctx context.Context) *LoggerEntry {
+	return logEntry.Ctx(ctx)
 }
 
-// NewContext adds the current `logContext` into `ctx`
+// NewContext adds the current `logEntry` into `ctx`
 func NewContext(ctx context.Context) context.Context {
-	return logContext.NewContext(ctx)
+	return logEntry.NewContext(ctx)
+}
+
+// AppendContext will add the fields into the supplied ctx
+func AppendContext(ctx context.Context, fields KV) context.Context {
+	return logEntry.AppendContext(ctx, fields)
 }
 
 // Debug logs a message at level Debug on the standard logger.
 func Debug(args ...interface{}) {
-	logContext.Debug(args...)
+	logEntry.Debug(args...)
 }
 
 // Print logs a message at level Info on the standard logger.
 func Print(args ...interface{}) {
-	logContext.Print(args...)
+	logEntry.Print(args...)
 }
 
 // Info logs a message at level Info on the standard logger.
 func Info(args ...interface{}) {
-	logContext.Info(args...)
+	logEntry.Info(args...)
 }
 
 // Error logs a message at level Error on the standard logger.
 func Error(args ...interface{}) {
-	logContext.Error(args...)
+	logEntry.Error(args...)
 }
 
 // Debugf logs a message at level Debug on the standard logger.
 func Debugf(format string, args ...interface{}) {
-	logContext.Debugf(format, args...)
+	logEntry.Debugf(format, args...)
 }
 
 // Printf logs a message at level Info on the standard logger.
 func Printf(format string, args ...interface{}) {
-	logContext.Printf(format, args...)
+	logEntry.Printf(format, args...)
 }
 
 // Infof logs a message at level Info on the standard logger.
 func Infof(format string, args ...interface{}) {
-	logContext.Infof(format, args...)
+	logEntry.Infof(format, args...)
 }
 
 // Errorf logs a message at level Error on the standard logger.
 func Errorf(format string, args ...interface{}) {
-	logContext.Errorf(format, args...)
+	logEntry.Errorf(format, args...)
 }

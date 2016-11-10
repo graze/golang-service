@@ -19,7 +19,7 @@ import (
 
 // logContextHandler contains a local logger context and the handler
 type logContextHandler struct {
-	logger  log.Context
+	logger  log.FieldLogger
 	handler http.Handler
 }
 
@@ -62,6 +62,6 @@ func LogContextHandler(h http.Handler) http.Handler {
 }
 
 // LoggingContextHandler returns a handler that adds `http` and `transaction` items into the provided logging context
-func LoggingContextHandler(logger log.Context, h http.Handler) http.Handler {
+func LoggingContextHandler(logger log.FieldLogger, h http.Handler) http.Handler {
 	return logContextHandler{logger.With(log.KV{}), h}
 }

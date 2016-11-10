@@ -19,9 +19,9 @@ import (
 )
 
 var (
-	logContext = New()
-	appName    = "LOG_APPLICATION"
-	envName    = "ENVIRONMENT"
+	logEntry = New()
+	appName  = "LOG_APPLICATION"
+	envName  = "ENVIRONMENT"
 )
 
 // KV is a shorthand for logrus.Fields so less text is required to be typed:
@@ -29,13 +29,14 @@ var (
 // 	log.With(log.KV{"k":"v"})
 type KV logrus.Fields
 
-// Context represents a Logging Context
-type Context interface {
-	Ctx(ctx context.Context) *ContextEntry
+// FieldLogger represents a Logging FieldLogger
+type FieldLogger interface {
+	Ctx(ctx context.Context) *LoggerEntry
 	NewContext(ctx context.Context) context.Context
+	AppendContext(ctx context.Context, fields KV) context.Context
 
-	With(fields KV) *ContextEntry
-	Err(err error) *ContextEntry
+	With(fields KV) *LoggerEntry
+	Err(err error) *LoggerEntry
 
 	Fields() KV
 
@@ -59,43 +60,48 @@ type Logger interface {
 	AddHook(hook logrus.Hook)
 }
 
-// ContextEntry is a logging context that can be passed around
-type ContextEntry struct {
+// LoggerEntry is a logging context that can be passed around
+type LoggerEntry struct {
 	*logrus.Entry
 }
 
-// NewContext returns the provided context with this ContextEntry added
-func (c *ContextEntry) NewContext(ctx context.Context) context.Context {
+// NewContext returns the provided context with this LoggerEntry added
+func (c *LoggerEntry) NewContext(ctx context.Context) context.Context {
 	return context.WithValue(ctx, logKey, c.Fields())
 }
 
 // Ctx will use any logging context contained in context.Context to append to the current log context
-func (c *ContextEntry) Ctx(ctx context.Context) *ContextEntry {
+func (c *LoggerEntry) Ctx(ctx context.Context) *LoggerEntry {
 	if fields, ok := ctx.Value(logKey).(KV); ok {
 		return c.With(fields)
 	}
 	return c.With(KV{})
 }
 
-// With creates a new `ContextEntry` and adds the fields to it
-func (c *ContextEntry) With(fields KV) *ContextEntry {
+// AppendContext will append the fields to the ctx and return a new context.Context
+func (c *LoggerEntry) AppendContext(ctx context.Context, fields KV) context.Context {
+	return c.Ctx(ctx).With(fields).NewContext(ctx)
+}
+
+// With creates a new LoggerEntry and adds the fields to it
+func (c *LoggerEntry) With(fields KV) *LoggerEntry {
 	// type conversion of same type without refection
 	data := make(logrus.Fields, len(fields))
 	for k, v := range fields {
 		data[k] = v
 	}
 	entry := c.Entry.WithFields(data)
-	return &ContextEntry{entry}
+	return &LoggerEntry{entry}
 }
 
-// Err adds an error and returns a new `ContextEntry`
-func (c *ContextEntry) Err(err error) *ContextEntry {
+// Err adds an error and returns a new LoggerEntry
+func (c *LoggerEntry) Err(err error) *LoggerEntry {
 	entry := c.Entry.WithError(err)
-	return &ContextEntry{entry}
+	return &LoggerEntry{entry}
 }
 
 // Fields will return the current fields attached to a context
-func (c *ContextEntry) Fields() (fields KV) {
+func (c *LoggerEntry) Fields() (fields KV) {
 	fields = make(KV, len(c.Entry.Data))
 	for k, v := range c.Entry.Data {
 		fields[k] = v
@@ -104,34 +110,34 @@ func (c *ContextEntry) Fields() (fields KV) {
 }
 
 // SetOutput changes the output of the current context
-func (c *ContextEntry) SetOutput(out io.Writer) {
+func (c *LoggerEntry) SetOutput(out io.Writer) {
 	c.Logger.Out = out
 }
 
 // SetFormatter will change the formatter for the current context
-func (c *ContextEntry) SetFormatter(formatter logrus.Formatter) {
+func (c *LoggerEntry) SetFormatter(formatter logrus.Formatter) {
 	c.Logger.Formatter = formatter
 }
 
 // SetLevel changes the default logging level of the current context
-func (c *ContextEntry) SetLevel(level logrus.Level) {
+func (c *LoggerEntry) SetLevel(level logrus.Level) {
 	c.Logger.Level = level
 }
 
 // Level returns the current logging level this context will log at
-func (c *ContextEntry) Level() (level logrus.Level) {
+func (c *LoggerEntry) Level() (level logrus.Level) {
 	return c.Logger.Level
 }
 
 // AddHook will add a hook to the current context
-func (c *ContextEntry) AddHook(hook logrus.Hook) {
+func (c *LoggerEntry) AddHook(hook logrus.Hook) {
 	c.Logger.Hooks.Add(hook)
 }
 
-// New creates a new ContextEntry with a new Logger context (formatter, level, output, hooks)
-func New() (context *ContextEntry) {
+// New creates a new LoggerEntry with a new Logger context (formatter, level, output, hooks)
+func New() (context *LoggerEntry) {
 	base := logrus.New()
-	context = &ContextEntry{logrus.NewEntry(base)}
+	context = &LoggerEntry{logrus.NewEntry(base)}
 	fields := make(KV)
 	if app := os.Getenv(appName); app != "" {
 		fields["app"] = app

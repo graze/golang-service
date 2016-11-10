@@ -51,11 +51,11 @@ func TestMergeContext(t *testing.T) {
 func testImplements(t *testing.T) {
 	logger := New()
 	assert.Implements(t, (*Logger)(nil), logger)
-	assert.Implements(t, (*Context)(nil), logger)
+	assert.Implements(t, (*FieldLogger)(nil), logger)
 
 	local := logger.With(KV{"k": "v"})
-	assert.Implements(t, (*Context)(nil), local)
+	assert.Implements(t, (*FieldLogger)(nil), local)
 
 	global := With(KV{"k": "v"})
-	assert.Implements(t, (*Context)(nil), global)
+	assert.Implements(t, (*FieldLogger)(nil), global)
 }
