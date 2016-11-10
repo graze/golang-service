@@ -19,9 +19,10 @@ import (
 )
 
 var (
-	logEntry = New()
-	appName  = "LOG_APPLICATION"
-	envName  = "ENVIRONMENT"
+	logEntry  = New()
+	appName   = "LOG_APPLICATION"
+	envName   = "ENVIRONMENT"
+	levelName = "LOG_LEVEL"
 )
 
 // KV is a shorthand for logrus.Fields so less text is required to be typed:
@@ -138,6 +139,17 @@ func New() (context *LoggerEntry) {
 	}
 	if env := os.Getenv(envName); env != "" {
 		fields["env"] = env
+	}
+	if level := os.Getenv(levelName); level != "" {
+		if l, err := logrus.ParseLevel(level); err == nil {
+			context.SetLevel(l)
+		} else {
+			context.Err(err).With(KV{
+				"module":   "log_initialisation",
+				"tag":      "log_new_failed",
+				"logLevel": level,
+			}).Error("The supplied log level is invalid")
+		}
 	}
 	context = context.With(fields)
 	return
