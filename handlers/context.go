@@ -32,7 +32,7 @@ func (h logContextHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		ip = userIP.String()
 	}
 	newContext := logger.With(log.KV{
-		"transaction":     uuid.NewV4(),
+		"transaction":     uuid.NewV4().String(),
 		"http.method":     req.Method,
 		"http.protocol":   req.Proto,
 		"http.uri":        parseURI(req, url),
