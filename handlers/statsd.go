@@ -46,9 +46,7 @@ func writeStatsdLog(w *statsd.Client, req *http.Request, url url.URL, ts time.Ti
 		"protocol:" + req.Proto,
 	}
 
-	msDur := float64(dur.Nanoseconds() / (int64(time.Millisecond) / int64(time.Nanosecond)))
-
-	w.TimeInMilliseconds("request.response_time", msDur, tags, 1)
+	w.Timing("request.response_time", dur, tags, 1)
 	w.Incr("request.count", tags, 1)
 }
 

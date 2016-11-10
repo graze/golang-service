@@ -38,7 +38,6 @@ func (h structuredHandler) writeLog(w LoggingResponseWriter, req *http.Request, 
 // dur is the time taken by the server to generate the response
 // status and size are used to provide response HTTP status and size
 func writeStructuredLog(w LoggingResponseWriter, logger log.Context, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int) {
-	sDur := float64(dur.Nanoseconds()) / (float64(time.Second) / float64(time.Nanosecond))
 	uri := parseURI(req, url)
 	ip := ""
 	if userIP, err := getUserIP(req); err == nil {
@@ -57,7 +56,7 @@ func writeStructuredLog(w LoggingResponseWriter, logger log.Context, req *http.R
 		"http.user":       ip,
 		"http.ref":        req.Referer(),
 		"http.user-agent": req.Header.Get("User-Agent"),
-		"dur":             sDur,
+		"dur":             dur.Seconds(),
 		"ts":              ts.Format(time.RFC3339Nano),
 	}).Infof("%s %s %s", req.Method, uri, req.Proto)
 }

@@ -34,6 +34,10 @@ lint: ## Run gofmt and goimports in lint mode
 	${DOCKER_CMD} golint -set_exit_status ./metrics/...
 	${DOCKER_CMD} golint -set_exit_status ./nettest/...
 	${DOCKER_CMD} golint -set_exit_status ./
+	${DOCKER_CMD} go tool vet ./handlers
+	${DOCKER_CMD} go tool vet ./log
+	${DOCKER_CMD} go tool vet ./metrics
+	${DOCKER_CMD} go tool vet ./nettest
 
 format: ## Run gofmt to format the code
 	${DOCKER_CMD} gofmt -s -w ${CODE}
@@ -44,6 +48,7 @@ clean: ## Clean docker and git info
 	docker-compose rm -f
 	docker-compose down || echo "Cleaned"
 	git clean -d -f -f
+	rm -rf .glide
 
 # Build targets
 .SILENT: help

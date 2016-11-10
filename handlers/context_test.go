@@ -93,7 +93,7 @@ func TestContextUpdatesTheRequestContext(t *testing.T) {
 				ProtoMinor: 0,
 				URL:        &url.URL{Host: "www.example.com:443"},
 				Host:       "www.example.com:443",
-				RemoteAddr: "192.168.100.5",
+				RemoteAddr: "192.168.100.5:9843",
 			},
 			map[string]interface{}{
 				"http.method":     "CONNECT",
@@ -101,7 +101,7 @@ func TestContextUpdatesTheRequestContext(t *testing.T) {
 				"http.uri":        "www.example.com:443",
 				"http.path":       "www.example.com:443",
 				"http.host":       "www.example.com:443",
-				"http.user":       "",
+				"http.user":       "192.168.100.5",
 				"http.ref":        "",
 				"http.user-agent": "",
 			},

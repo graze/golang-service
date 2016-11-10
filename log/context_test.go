@@ -18,17 +18,18 @@ import (
 )
 
 func TestNewContext(t *testing.T) {
-	context := New()
-	assert.Exactly(t, context, context.Add(KV{"test": "test2"}))
-	hook := test.NewLocal(context.Logger)
+	original := New()
+	logger := original.With(KV{"test": "test2"})
+	assert.NotEqual(t, original, logger)
+	hook := test.NewLocal(logger.Logger)
 
-	context.Info("test")
+	logger.Info("test")
 	assert.Equal(t, 1, len(hook.Entries))
 	assert.Equal(t, "test", hook.LastEntry().Message)
 	assert.Equal(t, InfoLevel, hook.LastEntry().Level)
 	assert.Equal(t, "test2", hook.LastEntry().Data["test"])
 
-	context.With(KV{"2": 3}).Error("error")
+	logger.With(KV{"2": 3}).Error("error")
 	assert.Equal(t, 2, len(hook.Entries))
 	assert.Equal(t, "error", hook.LastEntry().Message)
 	assert.Equal(t, ErrorLevel, hook.LastEntry().Level)
@@ -37,25 +38,22 @@ func TestNewContext(t *testing.T) {
 }
 
 func TestMergeContext(t *testing.T) {
-	context := New()
-	context.Add(KV{"test": 1})
+	logger := New().With(KV{"test": 1})
 
-	context2 := New()
-	context2.Add(KV{"test2": 2})
+	logger2 := New().With(KV{"test2": 2})
 
-	assert.Equal(t, KV{"test": 1}, context.Fields())
-	assert.Equal(t, KV{"test2": 2}, context2.Fields())
+	assert.Equal(t, KV{"test": 1}, logger.Fields())
+	assert.Equal(t, KV{"test2": 2}, logger2.Fields())
 
-	assert.Exactly(t, context, context.Merge(context2))
-	assert.Equal(t, KV{"test": 1, "test2": 2}, context.Fields())
+	assert.Equal(t, KV{"test": 1, "test2": 2}, logger.With(logger2.Fields()).Fields())
 }
 
 func testImplements(t *testing.T) {
-	context := New()
-	assert.Implements(t, (*Logger)(nil), context)
-	assert.Implements(t, (*Context)(nil), context)
+	logger := New()
+	assert.Implements(t, (*Logger)(nil), logger)
+	assert.Implements(t, (*Context)(nil), logger)
 
-	local := context.With(KV{"k": "v"})
+	local := logger.With(KV{"k": "v"})
 	assert.Implements(t, (*Context)(nil), local)
 
 	global := With(KV{"k": "v"})
