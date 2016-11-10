@@ -34,6 +34,7 @@ type KV logrus.Fields
 type FieldLogger interface {
 	Ctx(ctx context.Context) *LoggerEntry
 	NewContext(ctx context.Context) context.Context
+	AppendContext(ctx context.Context, fields KV) context.Context
 
 	With(fields KV) *LoggerEntry
 	Err(err error) *LoggerEntry
@@ -76,6 +77,11 @@ func (c *LoggerEntry) Ctx(ctx context.Context) *LoggerEntry {
 		return c.With(fields)
 	}
 	return c.With(KV{})
+}
+
+// AppendContext will create a new context.Context based on ctx with the fields appended
+func (c *LoggerEntry) AppendContext(ctx context.Context, fields KV) context.Context {
+	return c.Ctx(ctx).With(KV).NewContext(ctx)
 }
 
 // With creates a new LoggerEntry and adds the fields to it
