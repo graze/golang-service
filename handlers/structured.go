@@ -70,11 +70,10 @@ func writeStructuredLog(w LoggingResponseWriter, logger log.FieldLogger, req *ht
 //  r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 //  	w.Write([]byte("This is a catch-all route"))
 //  })
-//  context := log.New()
-//	context.SetFormatter(&logrus.JSONFormatter{})
-//	context.Add(log.KV{"module":"request.handler"})
+//  logger := log.New()
+//	logger.SetFormatter(&logrus.JSONFormatter{})
 //  loggedRouter := handlers.StructuredLogHandler(
-//		log.With(log.KV{"module":"request.handler"})
+//		logger.With(log.KV{"module":"request.handler"})
 //		, r)
 //  http.ListenAndServe(":1123", loggedRouter)
 func StructuredLogHandler(logger log.FieldLogger, h http.Handler) http.Handler {
