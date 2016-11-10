@@ -67,6 +67,7 @@ func TestNewWithValidLogLevels(t *testing.T) {
 		level    string
 		expected logrus.Level
 	}{
+		"blank":      {"", logrus.InfoLevel},
 		"lower case": {"info", logrus.InfoLevel},
 		"upper case": {"INFO", logrus.InfoLevel},
 		"mixed case": {"InFo", logrus.InfoLevel},
