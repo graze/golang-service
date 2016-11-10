@@ -46,7 +46,7 @@ format: ## Run gofmt to format the code
 clean: ## Clean docker and git info
 	docker-compose stop
 	docker-compose rm -f
-	docker-compose down || echo "Cleaned"
+	docker-compose down --remove-orphans || echo "Cleaned"
 	git clean -d -f -f
 	rm -rf .glide
 

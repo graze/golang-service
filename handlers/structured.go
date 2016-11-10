@@ -57,7 +57,7 @@ func writeStructuredLog(w LoggingResponseWriter, logger log.FieldLogger, req *ht
 		"http.ref":        req.Referer(),
 		"http.user-agent": req.Header.Get("User-Agent"),
 		"dur":             dur.Seconds(),
-		"ts":              ts.Format(time.RFC3339Nano),
+		"http.time":       ts.Format(time.RFC3339Nano),
 	}).Infof("%s %s %s", req.Method, uri, req.Proto)
 }
 
