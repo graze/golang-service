@@ -81,7 +81,7 @@ func (c *LoggerEntry) Ctx(ctx context.Context) *LoggerEntry {
 
 // AppendContext will create a new context.Context based on ctx with the fields appended
 func (c *LoggerEntry) AppendContext(ctx context.Context, fields KV) context.Context {
-	return c.Ctx(ctx).With(KV).NewContext(ctx)
+	return c.Ctx(ctx).With(fields).NewContext(ctx)
 }
 
 // With creates a new LoggerEntry and adds the fields to it
