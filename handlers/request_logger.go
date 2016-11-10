@@ -175,6 +175,7 @@ func uriPath(req *http.Request, url url.URL) (uri string) {
 func getUserIP(req *http.Request) (net.IP, error) {
 	for _, h := range []string{"X-Forwarded-For", "X-Real-Ip"} {
 		for _, ip := range strings.Split(req.Header.Get(h), ",") {
+			log.With(log.KV{"ip": ip, "header": h}).Debug("looking up from header")
 			// header can contain spaces too, strip those out.
 			userIP := net.ParseIP(strings.Replace(ip, " ", "", -1))
 			if userIP == nil {
@@ -184,6 +185,7 @@ func getUserIP(req *http.Request) (net.IP, error) {
 		}
 	}
 	ip, _, err := net.SplitHostPort(req.RemoteAddr)
+	log.With(log.KV{"ip": ip}).Debug("looking up ip from remote Addr")
 	if err != nil {
 		return nil, fmt.Errorf("getUserIP: %q is not a valid IP:Port", req.RemoteAddr)
 	}
