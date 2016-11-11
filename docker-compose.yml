@@ -1,7 +1,7 @@
 version: '2'
 services:
-    local:
-        build: .
+    tools:
+        image: graze/golang-tools
         volumes:
             - .:/go/src/github.com/graze/golang-service
         working_dir: "/go/src/github.com/graze/golang-service"
