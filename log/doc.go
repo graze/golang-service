@@ -24,19 +24,16 @@ Global properties that are used whenever `log.<xxx>` is called can be set as suc
     log.SetFormatter(&logrus.TextFormatter{})
     log.SetOutput(os.Stderr)
     log.SetLevel(log.InfoLevel)
-    log.Add(log.KV{"service":"super_service"}) // apply `service=super_service` to each log message
+    log.AddHook(&sysloghook.Hook{})
 
 You can then log messages using the `log.` commands which will use the above configuration
 
-    log.Add(log.KV{
-        "app": "http-service"
-    })
-
     log.With(log.KV{
+        "app":    "http-service",
         "module": "request_handler",
-        "tag":    "received_request"
+        "tag":    "received_request",
         "method": "GET",
-        "path":   "/path"
+        "path":   "/path",
     }).Info("Received request");
 
     // app="http-service" module=request_handler tag=received_request method=GET path="/path" level=info
@@ -46,10 +43,7 @@ It is also possible to create a new logger ignoring the global configuration set
 create a new instance of a logger which can be passed around and used with other methods
 
     // create a fresh context using defaults (ignores the global logger properties set above)
-    logger := log.New()
-    logger.Add(log.KV{
-        "module": "request_handler"
-    })
+    logger := log.New().With(log.KV{"module": "request_handler"})
     logger.With(log.KV{
         "tag":    "received_request",
         "method": "GET",
@@ -67,6 +61,7 @@ are logged
     logger.SetFormatter(&logrus.JSONFormatter{})
     logger.SetLevel(log.DebugLevel)
     logger.SetOutput(os.Stdout)
+    logger.AddHook(&logglyHook{})
 
     logger.Debug("some debug output printed")
 
@@ -74,8 +69,7 @@ are logged
 
 This logger supports golang's `Context`. You can create a new context and use an existing context as such
 
-    logger := log.New()
-    logger.Add(log.KV{"key":"value"})
+    logger := log.New().With(log.KV{"key":"value"})
     ctx := logger.NewContext(context.Background())
 
     log.Ctx(ctx).Info("text")
@@ -84,15 +78,17 @@ This logger supports golang's `Context`. You can create a new context and use an
 
 You can use a logging context stored within a `context.Context` with a second local logger
 
-    logger := log.New()
-    logger.Add(log.KV{"key":"value"})
+    logger := log.New().With(log.KV{"key":"value"})
     ctx := logger.NewContext(context.Background())
 
-    logger2 := log.New()
-    logger2.Add(log.KV{"key2":"value2"})
+    logger2 := log.New().With(log.KV{"key2":"value2"})
     logger2.Ctx(ctx).Info("text")
 
     // key=value key2=value2 level=info msg=text
+
+You can append fields to an existing context using the follwoing command:
+
+    ctx = log.Ctx(ctx).With(log.KV{"key": "value"}).NewContext(ctx)
 
 As the logger is based on logrus you can add Hooks to each logger to send data to multiple outputs.
 See: https://github.com/Sirupsen/logrus#hooks

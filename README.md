@@ -47,10 +47,7 @@ time="2016-10-28T10:51:32Z" level=info msg="Received request" module="request_ha
 ### Log using a local field store
 
 ```go
-logger := log.New()
-logger.Add(log.KV{
-    "module": "request_handler"
-})
+logger := log.New().With(log.KV{"module":"request_handler"})
 logger.With(log.KV{
     "tag":    "received_request",
     "method": "GET",
@@ -68,8 +65,7 @@ time="2016-10-28T10:51:32Z" level=info msg="Received GET /path" tag="received_re
 The logger can use golang's context to pass around fields
 
 ```go
-logger := log.New()
-logger.Add(log.KV{"module": "request_handler"})
+logger := log.New().With(log.KV{"module": "request_handler"})
 ctx := logger.NewContext(context.Background())
 log.Ctx(ctx).
     With(log.KV{"tag": "received_request"}).
@@ -83,14 +79,14 @@ time="2016-10-28T10:51:32Z" level=info msg="Received request" tag="received_requ
 The context can be applied to another local logger
 
 ```go
-logger := log.New()
-logger.Add(log.KV{"module": "request_handler"})
+logger := log.New().With(log.KV{"module":"request_handler"})
 ctx := logger.NewContext(context.Background())
 
 logger2 := log.New()
 logger2.SetOutput(os.Stderr)
-logger2.Add(log.KV{"tag": "received_request"})
-logger2.Ctx(ctx).Info("Received request")
+logger2.Ctx(ctx).
+    With(log.KV{"tag": "received_request"}).
+    Info("Received request")
 ```
 
 ```
