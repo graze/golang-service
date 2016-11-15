@@ -14,7 +14,7 @@ import (
 	"net/http"
 
 	"github.com/graze/golang-service/log"
-	"github.com/twinj/uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 // logContextHandler contains a local logger context and the handler
