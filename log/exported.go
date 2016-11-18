@@ -95,6 +95,11 @@ func NewContext(ctx context.Context) context.Context {
 	return logEntry.NewContext(ctx)
 }
 
+// AppendContext creates a new context.Context from the supplied ctx with the fields appended to the end
+func AppendContext(ctx context.Context, fields KV) context.Context {
+	return logEntry.AppendContext(ctx, fields)
+}
+
 // Debug logs a message at level Debug on the standard logger.
 func Debug(args ...interface{}) {
 	logEntry.Debug(args...)

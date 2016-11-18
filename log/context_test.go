@@ -11,6 +11,7 @@
 package log
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -102,4 +103,22 @@ func TestNewWithInvalidLogLEvels(t *testing.T) {
 		assert.Equal(t, tc.expected, logger.Level(), "test: %s", k)
 	}
 	os.Setenv("LOG_LEVEL", "")
+}
+
+func testAppendContext(t *testing.T) {
+	ctx := With(KV{"key": "value"}).NewContext(context.Background())
+
+	ctx = AppendContext(ctx, KV{"key2": "value2"})
+
+	assert.Equal(t, KV{"key": "value", "key2": "value2"}, Ctx(ctx).Fields())
+
+	logger := New().With(KV{"key": "value"})
+	ctx = logger.NewContext(context.Background())
+
+	logger2 := New()
+
+	ctx = logger2.AppendContext(ctx, KV{"key2": "value2"})
+
+	assert.Equal(t, KV{"key": "value", "key2": "value2"}, logger2.Ctx(ctx).Fields())
+	assert.Equal(t, KV{}, logger2.Fields())
 }
