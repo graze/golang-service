@@ -3,12 +3,9 @@
 
 .DEFAULT_GOAL=help
 
-DOCKER_CMD=docker-compose run --rm local
+DOCKER_CMD=docker-compose run --rm tools
 MOUNT=/go/src/github.com/graze/golang-service
 CODE=./handlers ./log ./metrics ./nettest
-
-build-cli: ## Build the local image
-	docker-compose build local
 
 install: ## Install the dependencies
 	rm -rf vendor
