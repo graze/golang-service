@@ -5,7 +5,7 @@
 
 DOCKER_CMD=docker-compose run --rm local
 MOUNT=/go/src/github.com/graze/golang-service
-CODE=./handlers ./log ./metrics ./nettest
+CODE=./handlers ./log ./metrics ./nettest ./validate
 
 build-cli: ## Build the local image
 	docker-compose build local
@@ -33,11 +33,13 @@ lint: ## Run gofmt and goimports in lint mode
 	${DOCKER_CMD} golint -set_exit_status ./log/...
 	${DOCKER_CMD} golint -set_exit_status ./metrics/...
 	${DOCKER_CMD} golint -set_exit_status ./nettest/...
+	${DOCKER_CMD} golint -set_exit_status ./validate/...
 	${DOCKER_CMD} golint -set_exit_status ./
 	${DOCKER_CMD} go tool vet ./handlers
 	${DOCKER_CMD} go tool vet ./log
 	${DOCKER_CMD} go tool vet ./metrics
 	${DOCKER_CMD} go tool vet ./nettest
+	${DOCKER_CMD} go tool vet ./validate
 
 format: ## Run gofmt to format the code
 	${DOCKER_CMD} gofmt -s -w ${CODE}
