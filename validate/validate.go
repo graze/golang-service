@@ -27,7 +27,7 @@ Example:
 
 	func CreateItem(w http.ResponseWriter, r *http.Request) {
 		item := &Item{}
-		if err := validate.JsonRequest(ctx, r, item); err != nil {
+		if err := validate.JSONRequest(ctx, r, item); err != nil {
 			w.WriteHeader(400)
 			return
 		}
@@ -54,8 +54,14 @@ type Validatable interface {
 	Validate(ctx context.Context) error
 }
 
-// JsonRequest takes an http request, decodes the json and validates the input against a Validatable output
+// JSONRequest takes an http request, decodes the json and validates the input against a Validatable output
 // the Validatable variable will get populated with the contents of the body provided by *http.Request
+//
+// The base set of error types returned from this method are:
+// 	validate.IOError
+//  *json.SyntaxError
+//	*json.UnmarshalFieldError
+//	*json.UnmarshalTypeError
 //
 // Usage:
 // 	type Item struct {
@@ -72,21 +78,27 @@ type Validatable interface {
 //
 //	func CreateItem(w http.ResponseWriter, r *http.Request) {
 //		item := &Item{}
-//		if err := validate.JsonRequest(ctx, r, item); err != nil {
+//		if err := validate.JSONRequest(ctx, r, item); err != nil {
 //			w.WriteHeader(400)
 //			return
 //		}
 //	}
-func JsonRequest(ctx context.Context, r *http.Request, v Validatable) error {
+func JSONRequest(ctx context.Context, r *http.Request, v Validatable) error {
 	return Reader(ctx, r.Body, json.Unmarshal, v)
 }
 
-// XmlRequest takes an http request docodes the xml into an item and validates the provided item
-func XmlRequest(ctx context.Context, r *http.Request, v Validatable) error {
+// XMLRequest takes an http request docodes the xml into an item and validates the provided item
+//
+// The base set of error types returned from this method are:
+// 	validate.IOError
+//  *xml.SyntaxError
+//	*xml.TagPathError
+//	*xml.UnmarshalError
+func XMLRequest(ctx context.Context, r *http.Request, v Validatable) error {
 	return Reader(ctx, r.Body, xml.Unmarshal, v)
 }
 
-// ReadAndValidate takes a generic io.Reader, an unmarshaller  and validates the input against a Validatable item
+// Reader takes a generic io.Reader, an unmarshaller  and validates the input against a Validatable item
 // the Validatable variable will get populated with the contents of the body provided by *http.Request
 //
 // Usage:
@@ -96,7 +108,7 @@ func XmlRequest(ctx context.Context, r *http.Request, v Validatable) error {
 //	}
 //
 //  func (i *ApiInput) Validate(ctx context.Context) error {
-//		if RuneCountInString(i.Name) == 0 {
+//		if utf8.RuneCountInString(i.Name) == 0 {
 //			return fmt.Errorf("the field: name must be provided and not empty")
 //		}
 //		return nil

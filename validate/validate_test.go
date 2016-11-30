@@ -33,12 +33,12 @@ func (t *TypesStruct) Validate(ctx context.Context) error {
 	return nil
 }
 
-type XmlStruct struct {
+type XMLStruct struct {
 	Name   string `XmlName:"name"`
 	Drinks int    `XmlName:"drinks"`
 }
 
-func (x *XmlStruct) Validate(ctx context.Context) error {
+func (x *XMLStruct) Validate(ctx context.Context) error {
 	return nil
 }
 
@@ -98,7 +98,7 @@ func TestReader(t *testing.T) {
 		"xml validation": {
 			`<XmlStruct><Name>bob</Name><Drinks>12</Drinks></XmlStruct>`,
 			xml.Unmarshal,
-			&XmlStruct{},
+			&XMLStruct{},
 			false,
 			"",
 		},
@@ -137,7 +137,7 @@ func TestJsonRequest(t *testing.T) {
 	}
 
 	for k, tc := range cases {
-		err := JsonRequest(context.Background(), tc.Request, tc.Struct)
+		err := JSONRequest(context.Background(), tc.Request, tc.Struct)
 		assert.Equal(t, tc.Errored, err != nil, "test: %s", k)
 		if tc.Errored {
 			assert.Equal(t, tc.Expected, err.Error(), "test: %s", k)
@@ -154,14 +154,14 @@ func TestXmlRequest(t *testing.T) {
 	}{
 		"xml validation": {
 			newRequest(t, "POST", "/thing", `<XmlStruct><Name>bob</Name><Drinks>12</Drinks></XmlStruct>`),
-			&XmlStruct{},
+			&XMLStruct{},
 			false,
 			"",
 		},
 	}
 
 	for k, tc := range cases {
-		err := XmlRequest(context.Background(), tc.Request, tc.Struct)
+		err := XMLRequest(context.Background(), tc.Request, tc.Struct)
 		assert.Equal(t, tc.Errored, err != nil, "test: %s", k)
 		if tc.Errored {
 			assert.Equal(t, tc.Expected, err.Error(), "test: %s", k)

@@ -20,5 +20,7 @@ The metrics package prodives helpers for statsd
 The handlers package provides a set of handlers that handle http.Request log the results
 
 The nettest package provides a set of helpers for use when testing networks
+
+The validate package provides input validate for user requests
 */
 package golangservice
