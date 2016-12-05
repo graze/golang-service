@@ -22,12 +22,12 @@ type UserFinder func(key string, r *http.Request) (interface{}, error)
 // FailHandler gets called if the handler found an error with the Authorization
 type FailHandler func(w http.ResponseWriter, r *http.Request, err error, status int)
 
-// ApiKey contains a wrapper around a handler to provide authentication
+// APIKey contains a wrapper around a handler to provide authentication
 //
 // It uses the Authorization header in the format: <provider> <apiKey>
 // If the format of the header is valid, the validator will be called with the apiKey
 // if anything goes wrong, a callback on onError is called with the error and the http StatusCode to return
-type ApiKey struct {
+type APIKey struct {
 	// Provider is the name of the key being provided. The Authorization header is in the format: <provider> <apiKey>
 	// It must not contain any spaces
 	Provider string
@@ -39,7 +39,7 @@ type ApiKey struct {
 
 // apiKeyHandler implements http.Handler and responds
 type apiKeyHandler struct {
-	apiKey ApiKey
+	apiKey APIKey
 	fn     http.HandlerFunc
 }
 
@@ -89,10 +89,10 @@ func (e *InvalidKeyError) Error() string {
 //      fmt.Fprintf(w, err.Error())
 //  }
 //
-//  keyAuth := auth.ApiKey{"Graze", finder, onError}
+//  keyAuth := auth.APIKey{"Graze", finder, onError}
 //
 //  http.Handle("/thing", keyAuth.ThenFunc(ThingFunc))
-func (w ApiKey) ThenFunc(fn http.HandlerFunc) http.Handler {
+func (w APIKey) ThenFunc(fn http.HandlerFunc) http.Handler {
 	return apiKeyHandler{w, fn}
 }
 
@@ -112,15 +112,15 @@ func (w ApiKey) ThenFunc(fn http.HandlerFunc) http.Handler {
 //      fmt.Fprintf(w, err.Error())
 //  }
 //
-//  keyAuth := auth.ApiKey{"Graze", finder, onError}
+//  keyAuth := auth.APIKey{"Graze", finder, onError}
 //
 //  http.Handle("/thing", keyAuth.Then(ThingHandler))
-func (w ApiKey) Then(h http.Handler) http.Handler {
+func (w APIKey) Then(h http.Handler) http.Handler {
 	return apiKeyHandler{w, h.ServeHTTP}
 }
 
 // Handler wraps the Then method to become clearer
-func (w ApiKey) Handler(h http.Handler) http.Handler {
+func (w APIKey) Handler(h http.Handler) http.Handler {
 	return w.Then(h)
 }
 
@@ -148,9 +148,8 @@ func (h apiKeyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		h.apiKey.OnError(w, req, &InvalidKeyError{authHeaderValue, err}, http.StatusForbidden)
 		return
-	} else {
-		req = SaveUser(req, user)
 	}
+	req = SaveUser(req, user)
 
 	h.fn(w, req)
 }

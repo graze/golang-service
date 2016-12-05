@@ -97,7 +97,7 @@ func TestApiKeyAuthErrors(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	for k, tc := range cases {
-		auth := &ApiKey{tc.provider, tc.finder, func(w http.ResponseWriter, r *http.Request, err error, status int) {
+		auth := &APIKey{tc.provider, tc.finder, func(w http.ResponseWriter, r *http.Request, err error, status int) {
 			assert.IsType(t, tc.err, err, "test: %s", k)
 			assert.Equal(t, tc.status, status, "test: %s", k)
 		}}
@@ -140,7 +140,7 @@ func TestUserStorage(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	for k, tc := range cases {
-		auth := &ApiKey{tc.provider, tc.finder, func(w http.ResponseWriter, r *http.Request, err error, status int) {
+		auth := &APIKey{tc.provider, tc.finder, func(w http.ResponseWriter, r *http.Request, err error, status int) {
 			t.Errorf("onError handler called. Err: %s, Status: %d, Test: %s", err, status, k)
 		}}
 
