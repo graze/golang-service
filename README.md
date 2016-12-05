@@ -8,6 +8,8 @@
 - [NetTest](#nettest) helpers for use when testing networks
 - [Validation](#validation) to ensure the user input is correct
 
+[Godoc Documentation](https://godoc.org/github.com/graze/golang-service)
+
 ## Log
 
 Handle global logging with context. Based on [logrus](https://github.com/Sirupsen/logrus) incorporating golang's `context.context`
@@ -218,6 +220,49 @@ http.ListenAndServe(":1123", loggedRouter)
 Default Output:
 ```
 time="2016-10-28T10:51:32Z" level=info msg="GET / HTTP/1.1" dur=0.003200881 http.bytes=80 http.host="localhost:1123" http.method=GET http.path="/" http.protocol="HTTP/1.1" http.ref= http.status=200 http.uri="/" http.user= module=request.handler tag="request_handled" ts="2016-10-28T10:51:31.542424381Z"
+```
+
+### Authentication Handler
+
+```bash
+$ go get github.com/graze/golang-service/handlers/auth
+```
+
+Adds authentication to the request using middleware, with the benefit of linking the authentication with a user
+
+```go
+func finder(key string, r *http.Request) (interface{}, error) {
+    user, ok := users[key]
+    if !ok {
+        return nil, fmt.Errorf("No user found for: %s", key)
+    }
+    return user, nil
+}
+
+func onError(w http.ResponseWriter, r *http.Request, err error, status int) {
+    w.WriteHeader(status)
+    fmt.Fprintf(w, err.Error())
+}
+
+keyAuth := auth.ApiKey{
+    Provider: "Graze",
+    Finder: finder,
+    OnError: onError,
+}
+
+http.Handle("/", keyAuth.Next(router))
+```
+
+You can then retrieve the user within the request handler:
+
+```go
+func GetList(w http.ResponseWriter, r *http.Request) {
+    user, ok := auth.GetUser(r).(*account.User)
+    if !ok {
+        w.WriteHeader(403)
+        return
+    }
+}
 ```
 
 ## Metrics
