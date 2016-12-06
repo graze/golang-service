@@ -38,12 +38,6 @@ const (
 	DebugLevel
 )
 
-// key is a type to ensure unique key for context
-type key int
-
-// LogKey is the key used for context
-const logKey key = 0
-
 // SetOutput sets the standard logger output.
 func SetOutput(out io.Writer) {
 	logEntry.SetOutput(out)
@@ -70,13 +64,13 @@ func AddHook(hook logrus.Hook) {
 }
 
 // With returns a new LoggerEntry with the supplied fields
-func With(fields KV) *LoggerEntry {
+func With(fields KV) FieldLogger {
 	return logEntry.With(fields)
 }
 
 // Err creates a new LoggerEntry from the standard logger and adds an error
 // to it, using the value defined in ErrorKey as key.
-func Err(err error) *LoggerEntry {
+func Err(err error) FieldLogger {
 	return logEntry.Err(err)
 }
 
@@ -86,7 +80,7 @@ func Fields() KV {
 }
 
 // Ctx will use the provided context with its logs if applicable
-func Ctx(ctx context.Context) *LoggerEntry {
+func Ctx(ctx context.Context) FieldLogger {
 	return logEntry.Ctx(ctx)
 }
 

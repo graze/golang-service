@@ -11,6 +11,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -163,14 +164,14 @@ func TestContextUpdatesTheRequestContext(t *testing.T) {
 
 	for k, tc := range cases {
 		beforeHandler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			entry := log.Ctx(req.Context())
+			fields := log.Ctx(req.Context()).Fields()
 			for f, v := range tc.expected {
-				assert.Contains(t, entry.Data, f, "test %s - Has Field: %s", k, f)
-				assert.Equal(t, v, entry.Data[f], "test %s - Field: %s", k, f)
+				assert.Contains(t, fields, f, "test %s - Has Field: %s", k, f)
+				assert.Equal(t, v, fields[f], "test %s - Field: %s", k, f)
 			}
 			for f, v := range tc.regex {
-				assert.Contains(t, entry.Data, f, "test %s - Has Field: %s", k, f)
-				assert.Regexp(t, v, entry.Data[f], "test %s - Field: %s", k, f)
+				assert.Contains(t, fields, f, "test %s - Has Field: %s", k, f)
+				assert.Regexp(t, v, fields[f], "test %s - Field: %s", k, f)
 			}
 			w.Write([]byte("ok\n"))
 		})
@@ -178,4 +179,20 @@ func TestContextUpdatesTheRequestContext(t *testing.T) {
 		handler := LogContextHandler(beforeHandler)
 		handler.ServeHTTP(rec, tc.request)
 	}
+}
+
+func TestItUsesTheExistingRequestContext(t *testing.T) {
+	rec := httptest.NewRecorder()
+	req := newRequest("GET", "/stuff")
+	req = req.WithContext(context.WithValue(req.Context(), "foo", "bar"))
+	req = req.WithContext(context.WithValue(req.Context(), 0, "foo"))
+
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "bar", r.Context().Value("foo"))
+		assert.Equal(t, "foo", r.Context().Value(0))
+		assert.Equal(t, "GET", log.Ctx(r.Context()).Fields()["http.method"])
+	})
+
+	handler := LogContextHandler(h)
+	handler.ServeHTTP(rec, req)
 }

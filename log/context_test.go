@@ -24,7 +24,12 @@ func TestNewContext(t *testing.T) {
 	original := New()
 	logger := original.With(KV{"test": "test2"})
 	assert.NotEqual(t, original, logger)
-	hook := test.NewLocal(logger.Logger)
+
+	base, ok := logger.(*LoggerEntry)
+	if !ok {
+		t.Error("unable to convert logger to *LoggerEntry")
+	}
+	hook := test.NewLocal(base.Logger)
 
 	logger.Info("test")
 	assert.Equal(t, 1, len(hook.Entries))
@@ -38,6 +43,17 @@ func TestNewContext(t *testing.T) {
 	assert.Equal(t, ErrorLevel, hook.LastEntry().Level)
 	assert.Equal(t, 3, hook.LastEntry().Data["2"])
 	assert.Equal(t, "test2", hook.LastEntry().Data["test"])
+}
+
+func TestNewContextKeepsOldContextValues(t *testing.T) {
+	ctx := context.WithValue(context.Background(), "foo", "bar")
+	ctx = context.WithValue(ctx, 0, "foo")
+
+	logger := New()
+	ctx = logger.With(KV{"key": "value"}).NewContext(ctx)
+
+	assert.Equal(t, "bar", ctx.Value("foo"))
+	assert.Equal(t, "foo", ctx.Value(0))
 }
 
 func TestMergeContext(t *testing.T) {

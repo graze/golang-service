@@ -67,7 +67,10 @@ func TestGlobalConfiguration(t *testing.T) {
 	assert.Equal(t, InfoLevel, logger.Logger.Level)
 	assert.IsType(t, (*logrus.TextFormatter)(nil), logger.Logger.Formatter)
 
-	logger2 := With(KV{})
+	logger2, ok := With(KV{}).(*LoggerEntry)
+	if !ok {
+		t.Error("unable to cast logger to *LoggerEntry")
+	}
 
 	assert.Equal(t, os.Stdout, logger2.Logger.Out)
 	assert.Equal(t, DebugLevel, logger2.Logger.Level)

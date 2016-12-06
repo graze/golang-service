@@ -25,13 +25,12 @@ type logContextHandler struct {
 
 // ServeHTTP modifies the context of the request by adding a local logger context
 func (h logContextHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	logger := h.logger.Ctx(req.Context())
 	url := *req.URL
 	ip := ""
 	if userIP, err := getUserIP(req); err == nil {
 		ip = userIP.String()
 	}
-	newContext := logger.With(log.KV{
+	ctx := h.logger.Ctx(req.Context()).With(log.KV{
 		"transaction":     uuid.NewV4().String(),
 		"http.method":     req.Method,
 		"http.protocol":   req.Proto,
@@ -42,7 +41,7 @@ func (h logContextHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		"http.ref":        req.Referer(),
 		"http.user-agent": req.Header.Get("User-Agent"),
 	}).NewContext(req.Context())
-	h.handler.ServeHTTP(w, req.WithContext(newContext))
+	h.handler.ServeHTTP(w, req.WithContext(ctx))
 }
 
 // LogContextHandler returns a handler that adds `http` and `transaction` items into a common logging context
