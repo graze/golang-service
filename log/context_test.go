@@ -128,15 +128,22 @@ func testAppendContext(t *testing.T) {
 	assert.Equal(t, KV{}, logger2.Fields())
 }
 
+type newKey int
+
+const (
+	keyOne newKey = iota
+	keyTwo
+)
+
 func TestNewContextKeepsOldContextValues(t *testing.T) {
-	ctx := context.WithValue(context.Background(), "foo", "bar")
-	ctx = context.WithValue(ctx, 0, "foo")
+	ctx := context.WithValue(context.Background(), keyOne, "bar")
+	ctx = context.WithValue(ctx, keyTwo, "foo")
 
 	logger := New()
 	ctx = logger.With(KV{"key": "value"}).NewContext(ctx)
 
-	assert.Equal(t, "bar", ctx.Value("foo"))
-	assert.Equal(t, "foo", ctx.Value(0))
+	assert.Equal(t, "bar", ctx.Value(keyOne))
+	assert.Equal(t, "foo", ctx.Value(keyTwo))
 	logger2 := New()
 	assert.Equal(t, KV{"key": "value"}, logger2.Ctx(ctx).Fields())
 }

@@ -181,15 +181,22 @@ func TestContextUpdatesTheRequestContext(t *testing.T) {
 	}
 }
 
+type someKey int
+
+const (
+	keyOne someKey = iota
+	keyTwo
+)
+
 func TestItUsesTheExistingRequestContext(t *testing.T) {
 	rec := httptest.NewRecorder()
 	req := newRequest("GET", "/stuff")
-	req = req.WithContext(context.WithValue(req.Context(), "foo", "bar"))
-	req = req.WithContext(context.WithValue(req.Context(), 0, "foo"))
+	req = req.WithContext(context.WithValue(req.Context(), keyOne, "bar"))
+	req = req.WithContext(context.WithValue(req.Context(), keyTwo, "foo"))
 
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "bar", r.Context().Value("foo"))
-		assert.Equal(t, "foo", r.Context().Value(0))
+		assert.Equal(t, "bar", r.Context().Value(keyOne))
+		assert.Equal(t, "foo", r.Context().Value(keyTwo))
 		assert.Equal(t, "GET", log.Ctx(r.Context()).Fields()["http.method"])
 	})
 
