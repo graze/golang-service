@@ -45,17 +45,6 @@ func TestNewContext(t *testing.T) {
 	assert.Equal(t, "test2", hook.LastEntry().Data["test"])
 }
 
-func TestNewContextKeepsOldContextValues(t *testing.T) {
-	ctx := context.WithValue(context.Background(), "foo", "bar")
-	ctx = context.WithValue(ctx, 0, "foo")
-
-	logger := New()
-	ctx = logger.With(KV{"key": "value"}).NewContext(ctx)
-
-	assert.Equal(t, "bar", ctx.Value("foo"))
-	assert.Equal(t, "foo", ctx.Value(0))
-}
-
 func TestMergeContext(t *testing.T) {
 	logger := New().With(KV{"test": 1})
 
@@ -137,4 +126,17 @@ func testAppendContext(t *testing.T) {
 
 	assert.Equal(t, KV{"key": "value", "key2": "value2"}, logger2.Ctx(ctx).Fields())
 	assert.Equal(t, KV{}, logger2.Fields())
+}
+
+func TestNewContextKeepsOldContextValues(t *testing.T) {
+	ctx := context.WithValue(context.Background(), "foo", "bar")
+	ctx = context.WithValue(ctx, 0, "foo")
+
+	logger := New()
+	ctx = logger.With(KV{"key": "value"}).NewContext(ctx)
+
+	assert.Equal(t, "bar", ctx.Value("foo"))
+	assert.Equal(t, "foo", ctx.Value(0))
+	logger2 := New()
+	assert.Equal(t, KV{"key": "value"}, logger2.Ctx(ctx).Fields())
 }
