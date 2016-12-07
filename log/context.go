@@ -38,10 +38,10 @@ type KV logrus.Fields
 
 // FieldLogger represents a Logging FieldLogger
 type FieldLogger interface {
-	Ctx(ctx context.Context) FieldLogger
 	NewContext(ctx context.Context) context.Context
 	AppendContext(ctx context.Context, fields KV) context.Context
 
+	Ctx(ctx context.Context) FieldLogger
 	With(fields KV) FieldLogger
 	Err(err error) FieldLogger
 
