@@ -136,3 +136,93 @@ func TestTheContextDoesNotContainAPointerToTheLogger(t *testing.T) {
 		"key2": "value2",
 	}, Ctx(ctx).Fields())
 }
+
+func TestLevels(t *testing.T) {
+	logger := New()
+	logger.SetLevel(logrus.DebugLevel)
+	hook := test.NewLocal(logger.Logger)
+
+	cases := map[string]struct {
+		level logrus.Level
+		fn    func()
+	}{
+		"debug": {
+			logrus.DebugLevel,
+			func() { logger.Debug("debug") },
+		},
+		"debugf": {
+			logrus.DebugLevel,
+			func() { logger.Debugf("debug") },
+		},
+		"debugln": {
+			logrus.DebugLevel,
+			func() { logger.Debugln("debug") },
+		},
+		"info": {
+			logrus.InfoLevel,
+			func() { logger.Info("info") },
+		},
+		"infof": {
+			logrus.InfoLevel,
+			func() { logger.Infof("info") },
+		},
+		"infoln": {
+			logrus.InfoLevel,
+			func() { logger.Infoln("info") },
+		},
+		"print": {
+			logrus.InfoLevel,
+			func() { logger.Print("print") },
+		},
+		"printf": {
+			logrus.InfoLevel,
+			func() { logger.Printf("print") },
+		},
+		"println": {
+			logrus.InfoLevel,
+			func() { logger.Println("print") },
+		},
+		"warn": {
+			logrus.WarnLevel,
+			func() { logger.Warn("warn") },
+		},
+		"warnf": {
+			logrus.WarnLevel,
+			func() { logger.Warnf("Warn") },
+		},
+		"warnln": {
+			logrus.WarnLevel,
+			func() { logger.Warnln("Warn") },
+		},
+		"warning": {
+			logrus.WarnLevel,
+			func() { logger.Warning("warn") },
+		},
+		"warningf": {
+			logrus.WarnLevel,
+			func() { logger.Warningf("Warn") },
+		},
+		"warningln": {
+			logrus.WarnLevel,
+			func() { logger.Warningln("Warn") },
+		},
+		"error": {
+			logrus.ErrorLevel,
+			func() { logger.Error("error") },
+		},
+		"errorf": {
+			logrus.ErrorLevel,
+			func() { logger.Errorf("error") },
+		},
+		"errorln": {
+			logrus.ErrorLevel,
+			func() { logger.Errorln("error") },
+		},
+	}
+
+	for k, tc := range cases {
+		tc.fn()
+		assert.Equal(t, tc.level, hook.LastEntry().Level, "test: %s", k)
+		hook.Reset()
+	}
+}
