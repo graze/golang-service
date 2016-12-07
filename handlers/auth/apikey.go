@@ -39,8 +39,8 @@ type APIKey struct {
 
 // apiKeyHandler implements http.Handler and responds
 type apiKeyHandler struct {
-	apiKey APIKey
-	fn     http.HandlerFunc
+	apiKey  APIKey
+	handler http.Handler
 }
 
 type (
@@ -92,8 +92,8 @@ func (e *InvalidKeyError) Error() string {
 //  keyAuth := auth.APIKey{"Graze", finder, onError}
 //
 //  http.Handle("/thing", keyAuth.ThenFunc(ThingFunc))
-func (w APIKey) ThenFunc(fn http.HandlerFunc) http.Handler {
-	return apiKeyHandler{w, fn}
+func (w APIKey) ThenFunc(fn func(http.ResponseWriter, *http.Request)) http.Handler {
+	return w.Then(http.HandlerFunc(fn))
 }
 
 // Then surrounds an existing http.Handler and returns a new http.Handler
@@ -116,7 +116,7 @@ func (w APIKey) ThenFunc(fn http.HandlerFunc) http.Handler {
 //
 //  http.Handle("/thing", keyAuth.Then(ThingHandler))
 func (w APIKey) Then(h http.Handler) http.Handler {
-	return apiKeyHandler{w, h.ServeHTTP}
+	return apiKeyHandler{w, h}
 }
 
 // Handler wraps the Then method to become clearer
@@ -151,5 +151,5 @@ func (h apiKeyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 	req = SaveUser(req, user)
 
-	h.fn(w, req)
+	h.handler.ServeHTTP(w, req)
 }
