@@ -99,14 +99,24 @@ func Debug(args ...interface{}) {
 	logEntry.Debug(args...)
 }
 
+// Info logs a message at level Info on the standard logger.
+func Info(args ...interface{}) {
+	logEntry.Info(args...)
+}
+
 // Print logs a message at level Info on the standard logger.
 func Print(args ...interface{}) {
 	logEntry.Print(args...)
 }
 
-// Info logs a message at level Info on the standard logger.
-func Info(args ...interface{}) {
-	logEntry.Info(args...)
+// Warn logs a message at level Warning on the standard logger.
+func Warn(args ...interface{}) {
+	logEntry.Warn(args...)
+}
+
+// Warning logs a message at level Warning on the standard logger.
+func Warning(args ...interface{}) {
+	logEntry.Warning(args...)
 }
 
 // Error logs a message at level Error on the standard logger.
@@ -114,14 +124,19 @@ func Error(args ...interface{}) {
 	logEntry.Error(args...)
 }
 
+// Fatal logs a message at level Fatal on the standard logger
+func Fatal(args ...interface{}) {
+	logEntry.Fatal(args)
+}
+
+// Panic logs a message at level Panic on the standard logger
+func Panic(args ...interface{}) {
+	logEntry.Panic(args)
+}
+
 // Debugf logs a message at level Debug on the standard logger.
 func Debugf(format string, args ...interface{}) {
 	logEntry.Debugf(format, args...)
-}
-
-// Printf logs a message at level Info on the standard logger.
-func Printf(format string, args ...interface{}) {
-	logEntry.Printf(format, args...)
 }
 
 // Infof logs a message at level Info on the standard logger.
@@ -129,7 +144,72 @@ func Infof(format string, args ...interface{}) {
 	logEntry.Infof(format, args...)
 }
 
+// Printf logs a message at level Info on the standard logger.
+func Printf(format string, args ...interface{}) {
+	logEntry.Printf(format, args...)
+}
+
+// Warnf logs a message at level Warning on the standard logger.
+func Warnf(format string, args ...interface{}) {
+	logEntry.Warnf(format, args...)
+}
+
+// Warningf logs a message at level Warning on the standard logger.
+func Warningf(format string, args ...interface{}) {
+	logEntry.Warningf(format, args...)
+}
+
 // Errorf logs a message at level Error on the standard logger.
 func Errorf(format string, args ...interface{}) {
 	logEntry.Errorf(format, args...)
+}
+
+// Fatalf logs a message at level Fatal on the standard logger
+func Fatalf(format string, args ...interface{}) {
+	logEntry.Fatal(format, args)
+}
+
+// Panicf logs a message at level Panic on the standard logger
+func Panicf(format string, args ...interface{}) {
+	logEntry.Panic(format, args)
+}
+
+// Debugln logs a message at level Debug on the standard logger.
+func Debugln(args ...interface{}) {
+	logEntry.Debugln(args...)
+}
+
+// Infoln logs a message at level Info on the standard logger.
+func Infoln(args ...interface{}) {
+	logEntry.Infoln(args...)
+}
+
+// Println logs a message at level Info on the standard logger.
+func Println(args ...interface{}) {
+	logEntry.Println(args...)
+}
+
+// Warnln logs a message at level Warning on the standard logger.
+func Warnln(args ...interface{}) {
+	logEntry.Warnln(args...)
+}
+
+// Warningln logs a message at level Warning on the standard logger.
+func Warningln(args ...interface{}) {
+	logEntry.Warningln(args...)
+}
+
+// Errorln logs a message at level Error on the standard logger.
+func Errorln(args ...interface{}) {
+	logEntry.Errorln(args...)
+}
+
+// Fatalln logs a message at level Fatal on the standard logger
+func Fatalln(args ...interface{}) {
+	logEntry.Fatalln(args)
+}
+
+// Panicln logs a message at level Panic on the standard logger
+func Panicln(args ...interface{}) {
+	logEntry.Panicln(args)
 }
