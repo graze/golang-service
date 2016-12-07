@@ -221,7 +221,11 @@ func TestStructuredLogging(t *testing.T) {
 	}
 
 	logger := log.New().With(log.KV{"transaction": "test-123"})
-	hook := test.NewLocal(logger.Logger)
+	base, ok := logger.(*log.LoggerEntry)
+	if !ok {
+		t.Error("Unable to cast logger to log.LoggerEntry")
+	}
+	hook := test.NewLocal(base.Logger)
 	local := logger.With(log.KV{"module": "request.handler"})
 
 	for k, tc := range cases {

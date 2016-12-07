@@ -24,7 +24,12 @@ func TestNewContext(t *testing.T) {
 	original := New()
 	logger := original.With(KV{"test": "test2"})
 	assert.NotEqual(t, original, logger)
-	hook := test.NewLocal(logger.Logger)
+
+	base, ok := logger.(*LoggerEntry)
+	if !ok {
+		t.Error("unable to convert logger to *LoggerEntry")
+	}
+	hook := test.NewLocal(base.Logger)
 
 	logger.Info("test")
 	assert.Equal(t, 1, len(hook.Entries))
@@ -121,4 +126,24 @@ func testAppendContext(t *testing.T) {
 
 	assert.Equal(t, KV{"key": "value", "key2": "value2"}, logger2.Ctx(ctx).Fields())
 	assert.Equal(t, KV{}, logger2.Fields())
+}
+
+type newKey int
+
+const (
+	keyOne newKey = iota
+	keyTwo
+)
+
+func TestNewContextKeepsOldContextValues(t *testing.T) {
+	ctx := context.WithValue(context.Background(), keyOne, "bar")
+	ctx = context.WithValue(ctx, keyTwo, "foo")
+
+	logger := New()
+	ctx = logger.With(KV{"key": "value"}).NewContext(ctx)
+
+	assert.Equal(t, "bar", ctx.Value(keyOne))
+	assert.Equal(t, "foo", ctx.Value(keyTwo))
+	logger2 := New()
+	assert.Equal(t, KV{"key": "value"}, logger2.Ctx(ctx).Fields())
 }

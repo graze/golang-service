@@ -25,6 +25,12 @@ var (
 	levelName = "LOG_LEVEL"
 )
 
+// key is a type to ensure unique key for context
+type key int
+
+// LogKey is the key used for context
+const logKey key = iota
+
 // KV is a shorthand for logrus.Fields so less text is required to be typed:
 //
 // 	log.With(log.KV{"k":"v"})
@@ -32,24 +38,41 @@ type KV logrus.Fields
 
 // FieldLogger represents a Logging FieldLogger
 type FieldLogger interface {
-	Ctx(ctx context.Context) *LoggerEntry
 	NewContext(ctx context.Context) context.Context
 	AppendContext(ctx context.Context, fields KV) context.Context
 
-	With(fields KV) *LoggerEntry
-	Err(err error) *LoggerEntry
+	Ctx(ctx context.Context) FieldLogger
+	With(fields KV) FieldLogger
+	Err(err error) FieldLogger
 
 	Fields() KV
 
 	Debugf(format string, args ...interface{})
 	Infof(format string, args ...interface{})
 	Printf(format string, args ...interface{})
+	Warnf(format string, args ...interface{})
+	Warningf(format string, args ...interface{})
 	Errorf(format string, args ...interface{})
+	Fatalf(format string, args ...interface{})
+	Panicf(format string, args ...interface{})
 
 	Debug(args ...interface{})
 	Info(args ...interface{})
 	Print(args ...interface{})
+	Warn(args ...interface{})
+	Warning(args ...interface{})
 	Error(args ...interface{})
+	Fatal(args ...interface{})
+	Panic(args ...interface{})
+
+	Debugln(args ...interface{})
+	Infoln(args ...interface{})
+	Println(args ...interface{})
+	Warnln(args ...interface{})
+	Warningln(args ...interface{})
+	Errorln(args ...interface{})
+	Fatalln(args ...interface{})
+	Panicln(args ...interface{})
 }
 
 // Logger represents a struct that can modify the output of a log
@@ -72,7 +95,7 @@ func (c *LoggerEntry) NewContext(ctx context.Context) context.Context {
 }
 
 // Ctx will use any logging context contained in context.Context to append to the current log context
-func (c *LoggerEntry) Ctx(ctx context.Context) *LoggerEntry {
+func (c *LoggerEntry) Ctx(ctx context.Context) FieldLogger {
 	if fields, ok := ctx.Value(logKey).(KV); ok {
 		return c.With(fields)
 	}
@@ -85,7 +108,7 @@ func (c *LoggerEntry) AppendContext(ctx context.Context, fields KV) context.Cont
 }
 
 // With creates a new LoggerEntry and adds the fields to it
-func (c *LoggerEntry) With(fields KV) *LoggerEntry {
+func (c *LoggerEntry) With(fields KV) FieldLogger {
 	// type conversion of same type without refection
 	data := make(logrus.Fields, len(fields))
 	for k, v := range fields {
@@ -96,7 +119,7 @@ func (c *LoggerEntry) With(fields KV) *LoggerEntry {
 }
 
 // Err adds an error and returns a new LoggerEntry
-func (c *LoggerEntry) Err(err error) *LoggerEntry {
+func (c *LoggerEntry) Err(err error) FieldLogger {
 	entry := c.Entry.WithError(err)
 	return &LoggerEntry{entry}
 }
@@ -135,10 +158,10 @@ func (c *LoggerEntry) AddHook(hook logrus.Hook) {
 	c.Logger.Hooks.Add(hook)
 }
 
-// New creates a new LoggerEntry with a new Logger context (formatter, level, output, hooks)
-func New() (context *LoggerEntry) {
+// New creates a new FieldLogger with a new Logger (formatter, level, output, hooks)
+func New() (entry *LoggerEntry) {
 	base := logrus.New()
-	context = &LoggerEntry{logrus.NewEntry(base)}
+	logger := &LoggerEntry{logrus.NewEntry(base)}
 	fields := make(KV)
 	if app := os.Getenv(appName); app != "" {
 		fields["app"] = app
@@ -148,15 +171,15 @@ func New() (context *LoggerEntry) {
 	}
 	if level := os.Getenv(levelName); level != "" {
 		if l, err := logrus.ParseLevel(level); err == nil {
-			context.SetLevel(l)
+			logger.SetLevel(l)
 		} else {
-			context.Err(err).With(KV{
+			logger.Err(err).With(KV{
 				"module":   "log_initialisation",
 				"tag":      "log_new_failed",
 				"logLevel": level,
 			}).Error("The supplied log level is invalid")
 		}
 	}
-	context = context.With(fields)
+	entry, _ = logger.With(fields).(*LoggerEntry)
 	return
 }
