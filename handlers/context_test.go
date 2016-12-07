@@ -194,12 +194,16 @@ func TestItUsesTheExistingRequestContext(t *testing.T) {
 	req = req.WithContext(context.WithValue(req.Context(), keyOne, "bar"))
 	req = req.WithContext(context.WithValue(req.Context(), keyTwo, "foo"))
 
+	logger := log.With(log.KV{"key": "value"})
+
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "bar", r.Context().Value(keyOne))
 		assert.Equal(t, "foo", r.Context().Value(keyTwo))
-		assert.Equal(t, "GET", log.Ctx(r.Context()).Fields()["http.method"])
+		fields := log.Ctx(r.Context()).Fields()
+		assert.Equal(t, "GET", fields["http.method"])
+		assert.Equal(t, "value", fields["key"])
 	})
 
-	handler := LogContextHandler(h)
+	handler := LoggingContextHandler(logger, h)
 	handler.ServeHTTP(rec, req)
 }
