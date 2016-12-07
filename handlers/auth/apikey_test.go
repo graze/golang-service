@@ -144,10 +144,10 @@ func TestUserStorage(t *testing.T) {
 			t.Errorf("onError handler called. Err: %s, Status: %d, Test: %s", err, status, k)
 		}}
 
-		baseHandler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		baseHandler := func(w http.ResponseWriter, req *http.Request) {
 			user := GetUser(req)
 			assert.Equal(t, tc.expected, user, "test: %s", k)
-		})
+		}
 
 		handler := auth.ThenFunc(baseHandler)
 		handler.ServeHTTP(rec, tc.request)

@@ -21,8 +21,8 @@ type contextKey int
 // userKey is a private key to store the user information in the context in
 const userKey contextKey = iota
 
-// SaveUser takes a nominal user and stores it in a new context for the provided request
-func SaveUser(r *http.Request, user interface{}) *http.Request {
+// saveUser takes a nominal user and stores it in a new context for the provided request
+func saveUser(r *http.Request, user interface{}) *http.Request {
 	if user == nil {
 		return r
 	}
@@ -40,7 +40,7 @@ func SaveUser(r *http.Request, user interface{}) *http.Request {
 // 	http.Handle("/thing", keyAuth.Handler(ItemHandler))
 //
 // 	func ItemHandler(w http.ResponseWriter, r *http.Request) {
-// 		user, ok := auth.GetUser(r.Context()).(*User)
+// 		user, ok := auth.GetUser(r).(*User)
 // 		if !ok {
 // 			w.WriteHeader(403)
 // 			return

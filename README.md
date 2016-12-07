@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/graze/golang-service.svg?branch=master)](https://travis-ci.org/graze/golang-service)
 
 - [Log](log/README.md) Structured logging
-- [Handlers](handlers/README.md) http request middleware to add logging (healthd, context, statsd, structured logs)
+- [Handlers](handlers/README.md) http request middleware to add logging (auth, healthd, log context, statsd, structured logs)
 - [Metrics](metrics/README.md) send monitoring metrics to collectors (currently: stats)
 - [NetTest](nettest/README.md) helpers for use when testing networks
 - [Validation](validate/README.md) to ensure the user input is correct

@@ -149,7 +149,7 @@ func (h apiKeyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		h.apiKey.OnError(w, req, &InvalidKeyError{authHeaderValue, err}, http.StatusForbidden)
 		return
 	}
-	req = SaveUser(req, user)
+	req = saveUser(req, user)
 
 	h.handler.ServeHTTP(w, req)
 }

@@ -109,6 +109,8 @@ time="2016-10-28T10:51:32Z" level=info msg="GET / HTTP/1.1" dur=0.003200881 http
 $ go get github.com/graze/golang-service/handlers/auth
 ```
 
+### API Key Authentication
+
 Adds authentication to the request using middleware, with the benefit of linking the authentication with a user
 
 ```go
@@ -125,7 +127,7 @@ func onError(w http.ResponseWriter, r *http.Request, err error, status int) {
     fmt.Fprintf(w, err.Error())
 }
 
-keyAuth := auth.ApiKey{
+keyAuth := auth.APIKey{
     Provider: "Graze",
     Finder: finder,
     OnError: onError,
