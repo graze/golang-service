@@ -134,19 +134,19 @@ func (h apiKeyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	authHeaderParts := strings.Split(authHeader[0], " ")
 	if len(authHeaderParts) != 2 {
-		h.apiKey.OnError(w, req, &InvalidFormatError{"<provider> <apiKey>", authHeader[0]}, http.StatusForbidden)
+		h.apiKey.OnError(w, req, &InvalidFormatError{"<provider> <apiKey>", authHeader[0]}, http.StatusUnauthorized)
 		return
 	}
 
 	authHeaderProvider, authHeaderValue := authHeaderParts[0], authHeaderParts[1]
 	if authHeaderProvider != h.apiKey.Provider {
-		h.apiKey.OnError(w, req, &BadProviderError{authHeaderProvider, h.apiKey.Provider}, http.StatusForbidden)
+		h.apiKey.OnError(w, req, &BadProviderError{authHeaderProvider, h.apiKey.Provider}, http.StatusUnauthorized)
 		return
 	}
 
 	user, err := h.apiKey.Finder(authHeaderValue, req)
 	if err != nil {
-		h.apiKey.OnError(w, req, &InvalidKeyError{authHeaderValue, err}, http.StatusForbidden)
+		h.apiKey.OnError(w, req, &InvalidKeyError{authHeaderValue, err}, http.StatusUnauthorized)
 		return
 	}
 	req = saveUser(req, user)
