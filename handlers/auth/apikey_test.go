@@ -59,7 +59,7 @@ func TestApiKeyAuthErrors(t *testing.T) {
 			"Graze",
 			headerRequest(t, "GET", "/path", map[string]string{"Authorization": "Fish cake"}),
 			&BadProviderError{"Graze", "Fish"},
-			http.StatusForbidden,
+			http.StatusUnauthorized,
 			func(key string, r *http.Request) (interface{}, error) {
 				return "", nil
 			},
@@ -68,7 +68,7 @@ func TestApiKeyAuthErrors(t *testing.T) {
 			"Graze",
 			headerRequest(t, "GET", "/path", map[string]string{"Authorization": "Fish"}),
 			&InvalidFormatError{"<provider> <apiKey>", "Fish"},
-			http.StatusForbidden,
+			http.StatusUnauthorized,
 			func(key string, r *http.Request) (interface{}, error) {
 				return "", nil
 			},
@@ -77,7 +77,7 @@ func TestApiKeyAuthErrors(t *testing.T) {
 			"Graze",
 			headerRequest(t, "GET", "/path", map[string]string{"Authorization": "Fish cake thing"}),
 			&InvalidFormatError{"<provider> <apiKey>", "Fish cake thing"},
-			http.StatusForbidden,
+			http.StatusUnauthorized,
 			func(key string, r *http.Request) (interface{}, error) {
 				return "", nil
 			},
@@ -86,7 +86,7 @@ func TestApiKeyAuthErrors(t *testing.T) {
 			"Graze",
 			headerRequest(t, "GET", "/path", map[string]string{"Authorization": "Graze key"}),
 			&InvalidKeyError{"key", errors.New("")},
-			http.StatusForbidden,
+			http.StatusUnauthorized,
 			func(key string, r *http.Request) (interface{}, error) {
 				assert.Equal(t, "key", key)
 				return "", errors.New("some failed error")
