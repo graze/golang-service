@@ -11,13 +11,28 @@
 /*
 Package auth provides a collection of authentication http.Handlers for use by HTTP services
 
+Finder
+
+All authentication types use a similar Finder to retrieve user information based on the supplied credentials.
+For this there are Finder and FinderFunc types which supplies a Find method to retrieve a user based on some credentials
+
+    type Finder interface {
+        Find(interface{}, *http.Request) (interace{}, error)
+    }
+
+The FinderFunc converts a function to a Finder interface
+
 Api Key Auth
 
-For a basic api key based authentication
+For a basic api key based authentication. It directly passes the apiKey as a the credentials to the Finder.Func method
 
 Usage:
-    func finder(key string, r *http.Request) (interface{}, error) {
-        user, ok := users[key]
+    func finder(key interface{}, r *http.Request) (interface{}, error) {
+        k, ok := key.(string)
+        if !ok {
+            return nil, fmt.Errorf("The supplied key is in an invald format")
+        }
+        user, ok := users[k]
         if !ok {
             return nil, fmt.Errorf("No user found for: %s", key)
         }
@@ -31,7 +46,7 @@ Usage:
 
     keyAuth := auth.ApiKey{
         Provider: "Graze",
-        Finder: finder,
+        Finder: auth.FinderFunc(finder),
         OnError: onError,
     }
 

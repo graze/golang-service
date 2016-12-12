@@ -33,7 +33,6 @@ lint: ## Run gofmt and goimports in lint mode
 	${DOCKER_CMD} golint -set_exit_status ./validate/...
 	${DOCKER_CMD} golint -set_exit_status ./
 	${DOCKER_CMD} go tool vet ./handlers
-	${DOCKER_CMD} go tool vet ./handlers/auth
 	${DOCKER_CMD} go tool vet ./log
 	${DOCKER_CMD} go tool vet ./metrics
 	${DOCKER_CMD} go tool vet ./nettest

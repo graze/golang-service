@@ -13,6 +13,23 @@ package auth
 import "net/http"
 
 // Finder will return an user/account for a given set of credentials
+//
+// Usage:
+// 	type Accounts struct {
+//		users map[string]User
+//  }
+//
+//  func (a Accounts) Find(c interface{}, r *http.Request) (interface{}, error) {
+// 		key, ok := c.(string)
+// 		if !ok {
+// 			return nil, fmt.Errorf("The supplied key is in an invald format")
+// 		}
+// 		user, ok := users[key]
+// 		if !ok {
+// 			return nil, fmt.Errorf("No user found for: %s", key)
+// 		}
+// 		return user, nil
+// 	}
 type Finder interface {
 	Find(credentials interface{}, r *http.Request) (interface{}, error)
 }
