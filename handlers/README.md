@@ -114,7 +114,11 @@ $ go get github.com/graze/golang-service/handlers/auth
 Adds authentication to the request using middleware, with the benefit of linking the authentication with a user
 
 ```go
-func finder(key string, r *http.Request) (interface{}, error) {
+func finder(c interface{}, r *http.Request) (interface{}, error) {
+    key, ok := c.(string)
+    if !ok {
+        return nil, fmt.Error("Invalid key format, expecting string")
+    }
     user, ok := users[key]
     if !ok {
         return nil, fmt.Errorf("No user found for: %s", key)
@@ -129,7 +133,7 @@ func onError(w http.ResponseWriter, r *http.Request, err error, status int) {
 
 keyAuth := auth.APIKey{
     Provider: "Graze",
-    Finder: finder,
+    Finder: auth.FinderFunc(finder),
     OnError: onError,
 }
 
