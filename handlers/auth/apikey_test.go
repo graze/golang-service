@@ -44,53 +44,53 @@ func TestApiKeyAuthErrors(t *testing.T) {
 		request  *http.Request
 		err      error
 		status   int
-		finder   UserFinder
+		finder   Finder
 	}{
 		"no header": {
 			"Graze",
 			headerRequest(t, "GET", "/path", map[string]string{}),
 			&NoHeaderError{},
 			http.StatusUnauthorized,
-			func(key string, r *http.Request) (interface{}, error) {
+			FinderFunc(func(key interface{}, r *http.Request) (interface{}, error) {
 				return "", nil
-			},
+			}),
 		},
 		"invalid provider": {
 			"Graze",
 			headerRequest(t, "GET", "/path", map[string]string{"Authorization": "Fish cake"}),
 			&BadProviderError{"Graze", "Fish"},
 			http.StatusUnauthorized,
-			func(key string, r *http.Request) (interface{}, error) {
+			FinderFunc(func(key interface{}, r *http.Request) (interface{}, error) {
 				return "", nil
-			},
+			}),
 		},
 		"invalid format": {
 			"Graze",
 			headerRequest(t, "GET", "/path", map[string]string{"Authorization": "Fish"}),
 			&InvalidFormatError{"<provider> <apiKey>", "Fish"},
 			http.StatusUnauthorized,
-			func(key string, r *http.Request) (interface{}, error) {
+			FinderFunc(func(key interface{}, r *http.Request) (interface{}, error) {
 				return "", nil
-			},
+			}),
 		},
 		"invalid format - too many fields": {
 			"Graze",
 			headerRequest(t, "GET", "/path", map[string]string{"Authorization": "Fish cake thing"}),
 			&InvalidFormatError{"<provider> <apiKey>", "Fish cake thing"},
 			http.StatusUnauthorized,
-			func(key string, r *http.Request) (interface{}, error) {
+			FinderFunc(func(key interface{}, r *http.Request) (interface{}, error) {
 				return "", nil
-			},
+			}),
 		},
 		"failed finder": {
 			"Graze",
 			headerRequest(t, "GET", "/path", map[string]string{"Authorization": "Graze key"}),
 			&InvalidKeyError{"key", errors.New("")},
 			http.StatusUnauthorized,
-			func(key string, r *http.Request) (interface{}, error) {
+			FinderFunc(func(key interface{}, r *http.Request) (interface{}, error) {
 				assert.Equal(t, "key", key)
 				return "", errors.New("some failed error")
-			},
+			}),
 		},
 	}
 
@@ -114,25 +114,25 @@ func TestUserStorage(t *testing.T) {
 	cases := map[string]struct {
 		request  *http.Request
 		provider string
-		finder   UserFinder
+		finder   Finder
 		expected interface{}
 	}{
 		"nil return": {
 			headerRequest(t, "GET", "/stuff", map[string]string{"Authorization": "Graze key"}),
 			"Graze",
-			func(key string, r *http.Request) (interface{}, error) {
+			FinderFunc(func(key interface{}, r *http.Request) (interface{}, error) {
 				assert.Equal(t, "key", key)
 				return nil, nil
-			},
+			}),
 			interface{}(nil),
 		},
 		"user": {
 			headerRequest(t, "GET", "/stuff", map[string]string{"Authorization": "Graze otherKey"}),
 			"Graze",
-			func(key string, r *http.Request) (interface{}, error) {
+			FinderFunc(func(key interface{}, r *http.Request) (interface{}, error) {
 				assert.Equal(t, "otherKey", key)
 				return user, nil
-			},
+			}),
 			user,
 		},
 	}

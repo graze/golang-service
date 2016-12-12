@@ -16,9 +16,6 @@ import (
 	"strings"
 )
 
-// UserFinder is a method that returns a user given a supplied key
-type UserFinder func(key string, r *http.Request) (interface{}, error)
-
 // FailHandler gets called if the handler found an error with the Authorization
 type FailHandler func(w http.ResponseWriter, r *http.Request, err error, status int)
 
@@ -32,7 +29,7 @@ type APIKey struct {
 	// It must not contain any spaces
 	Provider string
 	// Validator takes the provided <apiKey> and returns a user object or error if the key is invalid
-	Finder UserFinder
+	Finder Finder
 	// OnError gets called if the request is unauthorized or forbidden
 	OnError FailHandler
 }
@@ -144,7 +141,7 @@ func (h apiKeyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	user, err := h.apiKey.Finder(authHeaderValue, req)
+	user, err := h.apiKey.Finder.Find(authHeaderValue, req)
 	if err != nil {
 		h.apiKey.OnError(w, req, &InvalidKeyError{authHeaderValue, err}, http.StatusUnauthorized)
 		return
