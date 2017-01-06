@@ -46,8 +46,8 @@ func (l panicLogger) Handle(w io.Writer, r *http.Request, err error, status int)
 //      w.Write([]byte("panic happened, oh dear"))
 //  }
 //  logPanic := recovery.PanicLogger(logger.With(log.KV{"module":"panic.handler"}))
-//  recoverer := recovery.New(r, logPanic)
-//  http.ListenAndServe(":80", recoverer)
+//  recoverer := recovery.New(logPanic)
+//  http.ListenAndServe(":80", recoverer.Handle(r))
 func PanicLogger(logger log.FieldLogger) Handler {
 	return &panicLogger{logger}
 }

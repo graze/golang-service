@@ -28,7 +28,7 @@ func TestLogger(t *testing.T) {
 
 	loggerRecoverer := PanicLogger(logger)
 
-	handler := New(panicHandler, loggerRecoverer, echoRecoverer)
+	handler := New(loggerRecoverer, echoRecoverer).Handle(panicHandler)
 
 	rec := httptest.NewRecorder()
 	req := newRequest("GET", "http://example.com")

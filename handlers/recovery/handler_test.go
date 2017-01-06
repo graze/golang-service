@@ -40,7 +40,7 @@ func newRequest(method, url string) *http.Request {
 }
 
 func TestHandlerCallsNextHandlerWhenNoPanicOccours(t *testing.T) {
-	handler := New(okHandler)
+	handler := New().Handle(okHandler)
 
 	rec := httptest.NewRecorder()
 	req := newRequest("GET", "http://example.com")
@@ -70,7 +70,7 @@ func TestPanics(t *testing.T) {
 
 	for k, tc := range cases {
 		rec := httptest.NewRecorder()
-		handler := New(panicHandler, tc.handlers...)
+		handler := New(tc.handlers...).Handle(panicHandler)
 		handler.ServeHTTP(rec, newRequest("GET", "http://example.com"))
 		assert.Equal(t, tc.body, rec.Body.String(), "test: %s", k)
 		assert.Equal(t, tc.status, rec.Code, "test: %s", k)

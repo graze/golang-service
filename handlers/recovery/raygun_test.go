@@ -8,17 +8,15 @@
 // license: https://github.com/graze/golang-service/blob/master/LICENSE
 // link:    https://github.com/graze/golang-service
 
-package raygun
+package recovery
 
 import (
 	"context"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/MindscapeHQ/raygun4go"
-	"github.com/graze/golang-service/handlers/recovery"
 	"github.com/graze/golang-service/log"
 	"github.com/stretchr/testify/assert"
 )
@@ -44,26 +42,6 @@ func (r *raygunMock) CreateError(message string) error {
 	return nil
 }
 
-var okHandler = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-	w.Write([]byte("ok\n"))
-})
-
-var panicHandler = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-	panic("oh no!")
-})
-
-var echoRecoverer = recovery.HandlerFunc(func(w io.Writer, r *http.Request, err error, status int) {
-	w.Write([]byte(err.Error()))
-})
-
-func newRequest(method, url string) *http.Request {
-	req, err := http.NewRequest(method, url, nil)
-	if err != nil {
-		panic(err)
-	}
-	return req
-}
-
 func TestRaygun(t *testing.T) {
 	cases := map[string]struct {
 		req  *http.Request
@@ -80,7 +58,7 @@ func TestRaygun(t *testing.T) {
 	for k, tc := range cases {
 		rec := httptest.NewRecorder()
 		mock := &raygunMock{}
-		handler := recovery.New(panicHandler, New(mock))
+		handler := New(Raygun(mock)).Handle(panicHandler)
 		handler.ServeHTTP(rec, tc.req)
 
 		assert.Equal(t, tc.req, mock.request, "test: %s", k)

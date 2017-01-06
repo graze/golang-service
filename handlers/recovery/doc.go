@@ -12,16 +12,20 @@
 Package recovery is a http.Handler for handing panics and passing the error to multiple Recoverer handlers
 
 Usage
- 	r := mux.NewRouter()
- 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
- 	   panic("oh-o")
- 	})
+	r := mux.NewRouter()
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        panic("uh-oh")
+	})
 
- 	outputRecoverer := func(w io.Writer, r *http.Request, err error, status int) {
- 		w.Write([]byte("panic happened, oh dear"))
- 	}
- 	recoverer := recovery.New(r, recovery.Logger(log.New()), raygun.New(raygunClient), recovery.RecovererFunc(format))
- 	http.ListenAndServe(":80", recoverer)
+	outputRecoverer := func(w io.Writer, r *http.Request, err error, status int) {
+		w.Write([]byte("panic happened, oh dear"))
+	}
+	recoverer := recovery.New(
+        recovery.Logger(log.New()),
+        raygun.New(raygunClient),
+        recovery.RecovererFunc(outputRecoverer),
+    )
+	http.ListenAndServe(":80", recoverer.Handle(r))
 
 Logging Panic Handler
 
@@ -39,8 +43,8 @@ Usage:
         w.Write([]byte("panic happened, oh dear"))
     }
     logPanic := recovery.PanicLogger(logger.With(log.KV{"module":"panic.handler"}))
-    recoverer := recovery.New(r, logPanic)
-    http.ListenAndServe(":80", recoverer)
+    recoverer := recovery.New(logPanic)
+    http.ListenAndServe(":80", recoverer.Handle(r))
 
 Raygun Panic Handler
 
@@ -60,8 +64,7 @@ Usage:
     raygunClient.Silent(false)
     raygunClient.Version("1.0")
 
-    raygunHandler = raygun.New(raygunClient)
-    recoverer := recovery.New(r, raygunHandler)
-    http.ListenAndServe(":80", recoverer)
+    recoverer := recovery.New(recovery.Raygun(raygunClient))
+    http.ListenAndServe(":80", recoverer.Handle(r))
 */
 package recovery

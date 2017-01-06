@@ -8,35 +8,13 @@
 // license: https://github.com/graze/golang-service/blob/master/LICENSE
 // link:    https://github.com/graze/golang-service
 
-/*
-Package raygun sends recovered panic errors to raygun from within an http.Handler
-
-Usage:
-    r := mux.NewRouter()
-    r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-       panic("oh-o")
-    })
-
-    outputRecoverer := func(w io.Writer, r *http.Request, err error, status int) {
-        w.Write([]byte("panic happened, oh dear"))
-    }
-
-    raygunClient, _ := raygun4go.New(name, key)
-    raygunClient.Silent(false)
-    raygunClient.Version("1.0")
-
-    raygunHandler = raygun.New(raygunClient)
-    recoverer := recovery.New(r, raygunHandler)
-    http.ListenAndServe(":80", recoverer)
-*/
-package raygun
+package recovery
 
 import (
 	"io"
 	"net/http"
 
 	"github.com/MindscapeHQ/raygun4go"
-	"github.com/graze/golang-service/handlers/recovery"
 	"github.com/graze/golang-service/log"
 )
 
@@ -59,7 +37,7 @@ func (l raygunRecoverer) Handle(w io.Writer, r *http.Request, err error, status 
 	l.client.CreateError(err.Error())
 }
 
-// New creates a Raygun Recoverer given the details
-func New(client raygunClient) recovery.Handler {
+// Raygun creates a Raygun Recoverer given the details
+func Raygun(client raygunClient) Handler {
 	return &raygunRecoverer{client}
 }

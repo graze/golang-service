@@ -16,7 +16,7 @@ import (
 	"net/http"
 )
 
-// Handler handlers a panic recovery and does something (outputs to w, logs, reports to third party, etc)
+// Handler handlers a panic panic and does something (outputs to w, logs, reports to third party, etc)
 //
 // Note that multiple Recoverers could write to w
 type Handler interface {
@@ -31,32 +31,37 @@ func (f HandlerFunc) Handle(w io.Writer, r *http.Request, err error, status int)
 	f(w, r, err, status)
 }
 
-// middleware is a http.Handler to recover from panics
-type middleware struct {
-	next     http.Handler
+// Middleware provides a Handle method that implements http.Handler, and can be used with other http handler middlewares
+type Middleware struct {
 	handlers []Handler
 }
 
-// ServeHTTP defers a panic handler and writes 500, then passes off the error to something else
-func (h middleware) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	defer func() {
-		if e := recover(); e != nil {
-			err, ok := e.(error)
-			if !ok {
-				err = errors.New(e.(string))
-			}
+// Handle returns a middleware http.Handler to be used when handling requests
+func (m *Middleware) Handle(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		defer func() {
+			if e := recover(); e != nil {
+				err, ok := e.(error)
+				if !ok {
+					err = errors.New(e.(string))
+				}
 
-			w.WriteHeader(http.StatusInternalServerError)
-			for _, r := range h.handlers {
-				r.Handle(w, req, err, http.StatusInternalServerError)
+				w.WriteHeader(http.StatusInternalServerError)
+				for _, r := range m.handlers {
+					r.Handle(w, req, err, http.StatusInternalServerError)
+				}
 			}
-		}
-	}()
+		}()
 
-	h.next.ServeHTTP(w, req)
+		h.ServeHTTP(w, req)
+	})
 }
 
-// New creates a http.Handler middleware that loops through a series
+// New creates a http.Handler middleware that loops through a series of panic handlers that can write data back to the
+// response or log the panic
+//
+// The handler will always write a header of 500 (Internal Server Error) and each Panic handler can add content to the
+// body if required
 //
 // Usage:
 // 	r := mux.NewRouter()
@@ -65,10 +70,10 @@ func (h middleware) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // 	})
 //
 // 	outputRecoverer := func(w io.Writer, r *http.Request, err error, status int) {
-// 		w.Write([]byte("panic happened, oh dear"))
+// 		w.Write([]byte(`{"error":"unknown error"}`))
 // 	}
-// 	recoverer := recovery.New(r, recovery.Logger(log.New()), raygun.New(raygunClient), recovery.HandlerFunc(format))
-// 	http.ListenAndServe(":80", recoverer)
-func New(h http.Handler, handlers ...Handler) http.Handler {
-	return middleware{h, handlers}
+// 	recoverer := recovery.New(panic.Logger(log.New()), raygun.New(raygunClient), panic.HandlerFunc(format))
+// 	http.ListenAndServe(":80", recoverer.Handle(r))
+func New(handlers ...Handler) *Middleware {
+	return &Middleware{handlers}
 }
