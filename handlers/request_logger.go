@@ -18,16 +18,19 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/aristanetworks/goarista/monotime"
 )
 
 // LogServeHTTP creates a LoggingResponseWriter from `w` if applicable and calls `caller` with the request status, size,
 // time and duration
 func LogServeHTTP(w http.ResponseWriter, req *http.Request, handler http.Handler, caller func(w LoggingResponseWriter, req *http.Request, url url.URL, ts time.Time, dur time.Duration, status, size int)) {
 	t := time.Now().UTC()
+	mt := monotime.Now()
 	logger := MakeLogger(w)
 	url := *req.URL
 	handler.ServeHTTP(logger, req)
-	dur := time.Now().UTC().Sub(t)
+	dur := time.Duration(monotime.Now() - mt)
 	caller(logger, req, url, t, dur, logger.Status(), logger.Size())
 }
 
