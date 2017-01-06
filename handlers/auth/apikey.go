@@ -87,7 +87,7 @@ func (e *InvalidKeyError) Error() string {
 // 	keyAuth := auth.APIKey{"Graze", finder, onError}
 //
 // 	http.Handle("/thing", keyAuth.ThenFunc(ThingFunc))
-func (a APIKey) ThenFunc(fn func(http.ResponseWriter, *http.Request)) http.Handler {
+func (a *APIKey) ThenFunc(fn func(http.ResponseWriter, *http.Request)) http.Handler {
 	return a.Handler(http.HandlerFunc(fn))
 }
 
@@ -114,12 +114,12 @@ func (a APIKey) ThenFunc(fn func(http.ResponseWriter, *http.Request)) http.Handl
 // 	keyAuth := auth.APIKey{"Graze", finder, onError}
 //
 // 	http.Handle("/thing", keyAuth.Then(ThingHandler))
-func (a APIKey) Then(h http.Handler) http.Handler {
+func (a *APIKey) Then(h http.Handler) http.Handler {
 	return a.Handler(h)
 }
 
 // Handler wraps the Then method to become clearer
-func (a APIKey) Handler(h http.Handler) http.Handler {
+func (a *APIKey) Handler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		header := req.Header["Authorization"]
 		if len(header) == 0 {

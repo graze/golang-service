@@ -46,7 +46,7 @@ type XAPIKey struct {
 // 	keyAuth := auth.APIKey{"Graze", finder, onError}
 //
 // 	http.Handle("/thing", keyAuth.ThenFunc(ThingFunc))
-func (x XAPIKey) ThenFunc(fn func(http.ResponseWriter, *http.Request)) http.Handler {
+func (x *XAPIKey) ThenFunc(fn func(http.ResponseWriter, *http.Request)) http.Handler {
 	return x.Handler(http.HandlerFunc(fn))
 }
 
@@ -73,12 +73,12 @@ func (x XAPIKey) ThenFunc(fn func(http.ResponseWriter, *http.Request)) http.Hand
 // 	keyAuth := auth.APIKey{"Graze", finder, onError}
 //
 // 	http.Handle("/thing", keyAuth.Then(ThingHandler))
-func (x XAPIKey) Then(h http.Handler) http.Handler {
+func (x *XAPIKey) Then(h http.Handler) http.Handler {
 	return x.Handler(h)
 }
 
 // Handler wraps the Then method to become clearer
-func (x XAPIKey) Handler(h http.Handler) http.Handler {
+func (x *XAPIKey) Handler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		header := req.Header["X-Api-Key"]
 		if len(header) == 0 {
