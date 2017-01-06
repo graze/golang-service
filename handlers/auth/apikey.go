@@ -78,21 +78,21 @@ func (e *InvalidKeyError) Error() string {
 // 		if !ok {
 // 			return nil, fmt.Errorf("Could not understand creds")
 // 		}
-//      user, ok := users[key]
-//      if !ok {
-//          return nil, fmt.Errorf("No user found for: %s", key)
-//      }
-//      return user, nil
-//  }
+// 		user, ok := users[key]
+// 		if !ok {
+// 			return nil, fmt.Errorf("No user found for: %s", key)
+// 		}
+// 		return user, nil
+// 	}
 //
-//  func onError(w http.ResponseWriter, r *http.Request, err error, status int) {
-//      w.WriteHeader(status)
-//      fmt.Fprintf(w, err.Error())
-//  }
+// 	func onError(w http.ResponseWriter, r *http.Request, err error, status int) {
+// 		w.WriteHeader(status)
+// 		fmt.Fprintf(w, err.Error())
+// 	}
 //
-//  keyAuth := auth.APIKey{"Graze", finder, onError}
+// 	keyAuth := auth.APIKey{"Graze", finder, onError}
 //
-//  http.Handle("/thing", keyAuth.ThenFunc(ThingFunc))
+// 	http.Handle("/thing", keyAuth.ThenFunc(ThingFunc))
 func (w APIKey) ThenFunc(fn func(http.ResponseWriter, *http.Request)) http.Handler {
 	return w.Then(http.HandlerFunc(fn))
 }
@@ -100,26 +100,26 @@ func (w APIKey) ThenFunc(fn func(http.ResponseWriter, *http.Request)) http.Handl
 // Then surrounds an existing http.Handler and returns a new http.Handler
 //
 // Usage:
-//  func finder(creds interface{}, r *http.Request) (interface{}, error) {
+// 	func finder(creds interface{}, r *http.Request) (interface{}, error) {
 // 		key, ok := creds.(string)
 // 		if !ok {
 // 			return nil, fmt.Errorf("Could not understand creds")
 // 		}
-//      user, ok := users[key]
-//      if !ok {
-//          return nil, fmt.Errorf("No user found for: %s", key)
-//      }
-//      return user, nil
-//  }
+// 		user, ok := users[key]
+// 		if !ok {
+// 			return nil, fmt.Errorf("No user found for: %s", key)
+// 		}
+// 		return user, nil
+// 	}
 //
-//  func onError(w http.ResponseWriter, r *http.Request, err error, status int) {
-//      w.WriteHeader(status)
-//      fmt.Fprintf(w, err.Error())
-//  }
+// 	func onError(w http.ResponseWriter, r *http.Request, err error, status int) {
+// 		w.WriteHeader(status)
+// 		fmt.Fprintf(w, err.Error())
+// 	}
 //
-//  keyAuth := auth.APIKey{"Graze", finder, onError}
+// 	keyAuth := auth.APIKey{"Graze", finder, onError}
 //
-//  http.Handle("/thing", keyAuth.Then(ThingHandler))
+// 	http.Handle("/thing", keyAuth.Then(ThingHandler))
 func (w APIKey) Then(h http.Handler) http.Handler {
 	return apiKeyHandler{w, h}
 }
