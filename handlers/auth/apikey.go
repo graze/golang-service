@@ -34,12 +34,6 @@ type APIKey struct {
 	OnError FailHandler
 }
 
-// apiKeyHandler implements http.Handler and responds
-type apiKeyHandler struct {
-	apiKey  APIKey
-	handler http.Handler
-}
-
 type (
 	// NoHeaderError for when the Authorization header is not provided
 	NoHeaderError struct{}
@@ -93,8 +87,8 @@ func (e *InvalidKeyError) Error() string {
 // 	keyAuth := auth.APIKey{"Graze", finder, onError}
 //
 // 	http.Handle("/thing", keyAuth.ThenFunc(ThingFunc))
-func (w APIKey) ThenFunc(fn func(http.ResponseWriter, *http.Request)) http.Handler {
-	return w.Then(http.HandlerFunc(fn))
+func (a APIKey) ThenFunc(fn func(http.ResponseWriter, *http.Request)) http.Handler {
+	return a.Handler(http.HandlerFunc(fn))
 }
 
 // Then surrounds an existing http.Handler and returns a new http.Handler
@@ -120,41 +114,43 @@ func (w APIKey) ThenFunc(fn func(http.ResponseWriter, *http.Request)) http.Handl
 // 	keyAuth := auth.APIKey{"Graze", finder, onError}
 //
 // 	http.Handle("/thing", keyAuth.Then(ThingHandler))
-func (w APIKey) Then(h http.Handler) http.Handler {
-	return apiKeyHandler{w, h}
+func (a APIKey) Then(h http.Handler) http.Handler {
+	return a.Handler(h)
 }
 
 // Handler wraps the Then method to become clearer
-func (w APIKey) Handler(h http.Handler) http.Handler {
-	return w.Then(h)
+func (a APIKey) Handler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		header := req.Header["Authorization"]
+		if len(header) == 0 {
+			a.OnError(w, req, &NoHeaderError{}, http.StatusUnauthorized)
+			return
+		}
+
+		parts := strings.Split(header[0], " ")
+		if len(parts) != 2 {
+			a.OnError(w, req, &InvalidFormatError{"<provider> <apiKey>", header[0]}, http.StatusUnauthorized)
+			return
+		}
+
+		provider, value := parts[0], parts[1]
+		if provider != a.Provider {
+			a.OnError(w, req, &BadProviderError{provider, a.Provider}, http.StatusUnauthorized)
+			return
+		}
+
+		user, err := a.Finder.Find(value, req)
+		if err != nil {
+			a.OnError(w, req, &InvalidKeyError{value, err}, http.StatusUnauthorized)
+			return
+		}
+		req = saveUser(req, user)
+
+		h.ServeHTTP(w, req)
+	})
 }
 
-// ServeHTTP checks if the request has the correct authentication
-func (h apiKeyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	header := req.Header["Authorization"]
-	if len(header) == 0 {
-		h.apiKey.OnError(w, req, &NoHeaderError{}, http.StatusUnauthorized)
-		return
-	}
-
-	parts := strings.Split(header[0], " ")
-	if len(parts) != 2 {
-		h.apiKey.OnError(w, req, &InvalidFormatError{"<provider> <apiKey>", header[0]}, http.StatusUnauthorized)
-		return
-	}
-
-	provider, value := parts[0], parts[1]
-	if provider != h.apiKey.Provider {
-		h.apiKey.OnError(w, req, &BadProviderError{provider, h.apiKey.Provider}, http.StatusUnauthorized)
-		return
-	}
-
-	user, err := h.apiKey.Finder.Find(value, req)
-	if err != nil {
-		h.apiKey.OnError(w, req, &InvalidKeyError{value, err}, http.StatusUnauthorized)
-		return
-	}
-	req = saveUser(req, user)
-
-	h.handler.ServeHTTP(w, req)
+// NewAPIKey returns an APIKey struct that has a Handle method to provide authentication to your service
+func NewAPIKey(provider string, finder Finder, onError FailHandler) *APIKey {
+	return &APIKey{provider, finder, onError}
 }

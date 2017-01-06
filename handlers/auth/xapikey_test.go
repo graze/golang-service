@@ -19,35 +19,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var okHandler = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-	w.Write([]byte("ok\n"))
-})
-
-// headerRequest creates a new request with the authHeader
-func headerRequest(t *testing.T, method, url string, headers map[string]string) *http.Request {
-	req, err := http.NewRequest(method, url, nil)
-	if err != nil {
-		t.Error(err.Error())
-		t.Fail()
-	}
-	for k, v := range headers {
-		req.Header.Add(k, v)
-	}
-	return req
-}
-
-func TestApiKeyAuthErrors(t *testing.T) {
+func TestXApiKeyAuthErrors(t *testing.T) {
 	t.Parallel()
 
 	cases := map[string]struct {
-		provider string
-		request  *http.Request
-		err      error
-		status   int
-		finder   Finder
+		request *http.Request
+		err     error
+		status  int
+		finder  Finder
 	}{
 		"no header": {
-			"Graze",
 			headerRequest(t, "GET", "/path", map[string]string{}),
 			&NoHeaderError{},
 			http.StatusUnauthorized,
@@ -55,36 +36,8 @@ func TestApiKeyAuthErrors(t *testing.T) {
 				return "", nil
 			}),
 		},
-		"invalid provider": {
-			"Graze",
-			headerRequest(t, "GET", "/path", map[string]string{"Authorization": "Fish cake"}),
-			&BadProviderError{"Graze", "Fish"},
-			http.StatusUnauthorized,
-			FinderFunc(func(key interface{}, r *http.Request) (interface{}, error) {
-				return "", nil
-			}),
-		},
-		"invalid format": {
-			"Graze",
-			headerRequest(t, "GET", "/path", map[string]string{"Authorization": "Fish"}),
-			&InvalidFormatError{"<provider> <apiKey>", "Fish"},
-			http.StatusUnauthorized,
-			FinderFunc(func(key interface{}, r *http.Request) (interface{}, error) {
-				return "", nil
-			}),
-		},
-		"invalid format - too many fields": {
-			"Graze",
-			headerRequest(t, "GET", "/path", map[string]string{"Authorization": "Fish cake thing"}),
-			&InvalidFormatError{"<provider> <apiKey>", "Fish cake thing"},
-			http.StatusUnauthorized,
-			FinderFunc(func(key interface{}, r *http.Request) (interface{}, error) {
-				return "", nil
-			}),
-		},
 		"failed finder": {
-			"Graze",
-			headerRequest(t, "GET", "/path", map[string]string{"Authorization": "Graze key"}),
+			headerRequest(t, "GET", "/path", map[string]string{"x-api-key": "key"}),
 			&InvalidKeyError{"key", errors.New("")},
 			http.StatusUnauthorized,
 			FinderFunc(func(key interface{}, r *http.Request) (interface{}, error) {
@@ -97,7 +50,7 @@ func TestApiKeyAuthErrors(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	for k, tc := range cases {
-		auth := NewAPIKey(tc.provider, tc.finder, func(w http.ResponseWriter, r *http.Request, err error, status int) {
+		auth := NewXAPIKey(tc.finder, func(w http.ResponseWriter, r *http.Request, err error, status int) {
 			assert.IsType(t, tc.err, err, "test: %s", k)
 			assert.Equal(t, tc.status, status, "test: %s", k)
 		})
@@ -106,20 +59,18 @@ func TestApiKeyAuthErrors(t *testing.T) {
 	}
 }
 
-func TestValidAPIKeyAuth(t *testing.T) {
+func TestValidXAPIKeyAuth(t *testing.T) {
 	t.Parallel()
 
 	user := "some user"
 
 	cases := map[string]struct {
 		request  *http.Request
-		provider string
 		finder   Finder
 		expected interface{}
 	}{
 		"nil return": {
-			headerRequest(t, "GET", "/stuff", map[string]string{"Authorization": "Graze key"}),
-			"Graze",
+			headerRequest(t, "GET", "/stuff", map[string]string{"X-API-Key": "key"}),
 			FinderFunc(func(key interface{}, r *http.Request) (interface{}, error) {
 				assert.Equal(t, "key", key)
 				return nil, nil
@@ -127,8 +78,7 @@ func TestValidAPIKeyAuth(t *testing.T) {
 			interface{}(nil),
 		},
 		"user": {
-			headerRequest(t, "GET", "/stuff", map[string]string{"Authorization": "Graze otherKey"}),
-			"Graze",
+			headerRequest(t, "GET", "/stuff", map[string]string{"X-api-Key": "otherKey"}),
 			FinderFunc(func(key interface{}, r *http.Request) (interface{}, error) {
 				assert.Equal(t, "otherKey", key)
 				return user, nil
@@ -140,7 +90,7 @@ func TestValidAPIKeyAuth(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	for k, tc := range cases {
-		auth := NewAPIKey(tc.provider, tc.finder, func(w http.ResponseWriter, r *http.Request, err error, status int) {
+		auth := NewXAPIKey(tc.finder, func(w http.ResponseWriter, r *http.Request, err error, status int) {
 			t.Errorf("onError handler called. Err: %s, Status: %d, Test: %s", err, status, k)
 		})
 
