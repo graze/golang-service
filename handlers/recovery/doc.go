@@ -38,7 +38,7 @@ Usage:
     outputRecoverer := func(w io.Writer, r *http.Request, err error, status int) {
         w.Write([]byte("panic happened, oh dear"))
     }
-    logPanic := recovery.Logger(logger.With(log.KV{"module":"panic.handler"}))
+    logPanic := recovery.PanicLogger(logger.With(log.KV{"module":"panic.handler"}))
     recoverer := recovery.New(r, logPanic)
     http.ListenAndServe(":80", recoverer)
 
