@@ -17,9 +17,9 @@ import "net/http"
 // Usage:
 // 	type Accounts struct {
 //		users map[string]User
-//  }
+// 	}
 //
-//  func (a Accounts) Find(c interface{}, r *http.Request) (interface{}, error) {
+// 	func (a Accounts) Find(c interface{}, r *http.Request) (interface{}, error) {
 // 		key, ok := c.(string)
 // 		if !ok {
 // 			return nil, fmt.Errorf("The supplied key is in an invald format")

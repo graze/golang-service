@@ -73,7 +73,11 @@ func (e *InvalidKeyError) Error() string {
 // ThenFunc surrounds an existing handler func and returns a new http.Handler
 //
 // Usage:
-//  func finder(key string, r *http.Request) (interface{}, error) {
+//  func finder(creds interface{}, r *http.Request) (interface{}, error) {
+// 		key, ok := creds.(string)
+// 		if !ok {
+// 			return nil, fmt.Errorf("Could not understand creds")
+// 		}
 //      user, ok := users[key]
 //      if !ok {
 //          return nil, fmt.Errorf("No user found for: %s", key)
@@ -96,7 +100,11 @@ func (w APIKey) ThenFunc(fn func(http.ResponseWriter, *http.Request)) http.Handl
 // Then surrounds an existing http.Handler and returns a new http.Handler
 //
 // Usage:
-//  func finder(key string, r *http.Request) (interface{}, error) {
+//  func finder(creds interface{}, r *http.Request) (interface{}, error) {
+// 		key, ok := creds.(string)
+// 		if !ok {
+// 			return nil, fmt.Errorf("Could not understand creds")
+// 		}
 //      user, ok := users[key]
 //      if !ok {
 //          return nil, fmt.Errorf("No user found for: %s", key)
@@ -123,27 +131,27 @@ func (w APIKey) Handler(h http.Handler) http.Handler {
 
 // ServeHTTP checks if the request has the correct authentication
 func (h apiKeyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	authHeader := req.Header["Authorization"]
-	if len(authHeader) == 0 {
+	header := req.Header["Authorization"]
+	if len(header) == 0 {
 		h.apiKey.OnError(w, req, &NoHeaderError{}, http.StatusUnauthorized)
 		return
 	}
 
-	authHeaderParts := strings.Split(authHeader[0], " ")
-	if len(authHeaderParts) != 2 {
-		h.apiKey.OnError(w, req, &InvalidFormatError{"<provider> <apiKey>", authHeader[0]}, http.StatusUnauthorized)
+	parts := strings.Split(header[0], " ")
+	if len(parts) != 2 {
+		h.apiKey.OnError(w, req, &InvalidFormatError{"<provider> <apiKey>", header[0]}, http.StatusUnauthorized)
 		return
 	}
 
-	authHeaderProvider, authHeaderValue := authHeaderParts[0], authHeaderParts[1]
-	if authHeaderProvider != h.apiKey.Provider {
-		h.apiKey.OnError(w, req, &BadProviderError{authHeaderProvider, h.apiKey.Provider}, http.StatusUnauthorized)
+	provider, value := parts[0], parts[1]
+	if provider != h.apiKey.Provider {
+		h.apiKey.OnError(w, req, &BadProviderError{provider, h.apiKey.Provider}, http.StatusUnauthorized)
 		return
 	}
 
-	user, err := h.apiKey.Finder.Find(authHeaderValue, req)
+	user, err := h.apiKey.Finder.Find(value, req)
 	if err != nil {
-		h.apiKey.OnError(w, req, &InvalidKeyError{authHeaderValue, err}, http.StatusUnauthorized)
+		h.apiKey.OnError(w, req, &InvalidKeyError{value, err}, http.StatusUnauthorized)
 		return
 	}
 	req = saveUser(req, user)
