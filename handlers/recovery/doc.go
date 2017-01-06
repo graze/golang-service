@@ -12,20 +12,20 @@
 Package recovery is a http.Handler for handing panics and passing the error to multiple Recoverer handlers
 
 Usage
-	r := mux.NewRouter()
-	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+    r := mux.NewRouter()
+    r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
         panic("uh-oh")
-	})
+    })
 
-	outputRecoverer := func(w io.Writer, r *http.Request, err error, status int) {
-		w.Write([]byte("panic happened, oh dear"))
-	}
-	recoverer := recovery.New(
+    outputRecoverer := func(w io.Writer, r *http.Request, err error, status int) {
+        w.Write([]byte("panic happened, oh dear"))
+    }
+    recoverer := recovery.New(
         recovery.Logger(log.New()),
-        raygun.New(raygunClient),
+        recovery.Raygun(raygunClient),
         recovery.RecovererFunc(outputRecoverer),
     )
-	http.ListenAndServe(":80", recoverer.Handle(r))
+    http.ListenAndServe(":80", recoverer.Handle(r))
 
 Logging Panic Handler
 
