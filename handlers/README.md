@@ -6,10 +6,10 @@ Collection of middleware handlers for use by HTTP services
 $ go get github.com/graze/golang-service/handlers
 ```
 
-- [Context](#context_adder) - Adds some request and other context to the logger
-- [Healthd](#healthd_logger) - Output healthd formatted output for use with AWS Elastic Beanstalk
-- [Statsd](#statsd_logger) - Output request information to statsd
-- [Structured Log](#structured_request_logger) - Output a structured log message with the information from this requiest
+- [Context](#context-adder) - Adds some request and other context to the logger
+- [Healthd](#healthd-logger) - Output healthd formatted output for use with AWS Elastic Beanstalk
+- [Statsd](#statsd-logger) - Output request information to statsd
+- [Structured Log](#structured-request-logger) - Output a structured log message with the information from this requiest
 - [Authentication](auth/README.md) - Service authentication
 - [Recovery](recovery/README.md) - Recover from panics and handle it nicely
 

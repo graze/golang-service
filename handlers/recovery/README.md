@@ -9,7 +9,7 @@ It will always return an InternalServiceError status code (500) and leaves the c
 
 You can create custom handlers to do something when a panic occurs:
 
-Example Handler:
+**Example Handler:**
 
 ```go
 echoHandler := recovery.HandlerFunc(func (w io.Writer, r *http.Request, err error, status int) {
@@ -17,7 +17,7 @@ echoHandler := recovery.HandlerFunc(func (w io.Writer, r *http.Request, err erro
 })
 ```
 
-Usage as an http handler:
+**Usage as an http handler:**
 
 ```go
 http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
