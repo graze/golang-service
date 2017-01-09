@@ -11,60 +11,52 @@
 /*
 Package recovery is a http.Handler for handing panics and passing the error to multiple Recoverer handlers
 
-Usage
-    r := mux.NewRouter()
-    r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-        panic("uh-oh")
+The panic Recovery handler recovers from panics and output a nice format to the client, and handles the error using a variety of handlers.
+It will always return an InternalServiceError status code (500) and leaves the contents to the user.
+
+You can create custom handlers to do something when a panic occurs:
+
+Example Handler:
+
+    echoHandler := recovery.HandlerFunc(func (w io.Writer, r *http.Request, err error, status int) {
+        w.Write([]byte(err.Error()))
     })
 
-    outputRecoverer := func(w io.Writer, r *http.Request, err error, status int) {
-        w.Write([]byte("panic happened, oh dear"))
-    }
-    recoverer := recovery.New(
-        recovery.Logger(log.New()),
-        recovery.Raygun(raygunClient),
-        recovery.RecovererFunc(outputRecoverer),
-    )
-    http.ListenAndServe(":80", recoverer.Handle(r))
+recovery provides an http.Handler for use with http middleware
+
+```go
+http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	panic("uh-oh")
+})
+
+recoverer = recovery.New(echoHandler)
+http.ListenAndServe(":80", recoverer.Handle)
+```
 
 Logging Panic Handler
 
 The logging Recoverer will log an output of the recovered panic for debugging.
 
-Usage:
-    logger := log.New()
-
-    r := mux.NewRouter()
-    r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-       panic("oh-o")
-    })
-
-    outputRecoverer := func(w io.Writer, r *http.Request, err error, status int) {
-        w.Write([]byte("panic happened, oh dear"))
-    }
-    logPanic := recovery.PanicLogger(logger.With(log.KV{"module":"panic.handler"}))
-    recoverer := recovery.New(logPanic)
-    http.ListenAndServe(":80", recoverer.Handle(r))
+    logPanic := recovery.PanicLogger(log.With(log.KV{"module":"panic.handler"}))
 
 Raygun Panic Handler
 
 To pass panics off to a third party (such as raygun) this handler can be used.
-
-Usage:
-    r := mux.NewRouter()
-    r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-       panic("oh-o")
-    })
-
-    outputRecoverer := func(w io.Writer, r *http.Request, err error, status int) {
-        w.Write([]byte("panic happened, oh dear"))
-    }
 
     raygunClient, _ := raygun4go.New(name, key)
     raygunClient.Silent(false)
     raygunClient.Version("1.0")
 
     recoverer := recovery.New(recovery.Raygun(raygunClient))
-    http.ListenAndServe(":80", recoverer.Handle(r))
+
+Combining Multiple Recovery Handlers
+
+You can supply multiple recovery handlers that will each get called when a panic occurs.
+
+    recoverer := recovery.New(
+        recovery.PanicLogger(log.New()),
+        recovery.Raygun(raygunClient),
+        echoHandler,
+    )
 */
 package recovery
