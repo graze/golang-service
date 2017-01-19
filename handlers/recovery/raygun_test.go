@@ -58,7 +58,7 @@ func TestRaygun(t *testing.T) {
 	for k, tc := range cases {
 		rec := httptest.NewRecorder()
 		mock := &raygunMock{}
-		handler := New(Raygun(mock)).Handle(panicHandler)
+		handler := New(Raygun(mock))(panicHandler)
 		handler.ServeHTTP(rec, tc.req)
 
 		assert.Equal(t, tc.req, mock.request, "test: %s", k)

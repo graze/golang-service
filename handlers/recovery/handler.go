@@ -31,30 +31,29 @@ func (f HandlerFunc) Handle(w io.Writer, r *http.Request, err error, status int)
 	f(w, r, err, status)
 }
 
-// Middleware provides a Handle method that implements http.Handler, and can be used with other http handler middlewares
-type Middleware struct {
+// middleware provides a Handle method that implements http.Handler, and can be used with other http handler middlewares
+type middleware struct {
+	next     http.Handler
 	handlers []Handler
 }
 
 // Handle returns a middleware http.Handler to be used when handling requests
-func (m *Middleware) Handle(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		defer func() {
-			if e := recover(); e != nil {
-				err, ok := e.(error)
-				if !ok {
-					err = errors.New(e.(string))
-				}
-
-				w.WriteHeader(http.StatusInternalServerError)
-				for _, r := range m.handlers {
-					r.Handle(w, req, err, http.StatusInternalServerError)
-				}
+func (m *middleware) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	defer func() {
+		if e := recover(); e != nil {
+			err, ok := e.(error)
+			if !ok {
+				err = errors.New(e.(string))
 			}
-		}()
 
-		h.ServeHTTP(w, req)
-	})
+			w.WriteHeader(http.StatusInternalServerError)
+			for _, r := range m.handlers {
+				r.Handle(w, req, err, http.StatusInternalServerError)
+			}
+		}
+	}()
+
+	m.next.ServeHTTP(w, req)
 }
 
 // New creates a http.Handler middleware that loops through a series of panic handlers that can write data back to the
@@ -73,7 +72,9 @@ func (m *Middleware) Handle(h http.Handler) http.Handler {
 // 		w.Write([]byte(`{"error":"unknown error"}`))
 // 	}
 // 	recoverer := recovery.New(panic.Logger(log.New()), raygun.New(raygunClient), panic.HandlerFunc(format))
-// 	http.ListenAndServe(":80", recoverer.Handle(r))
-func New(handlers ...Handler) *Middleware {
-	return &Middleware{handlers}
+// 	http.ListenAndServe(":80", recoverer(r))
+func New(handlers ...Handler) func(h http.Handler) http.Handler {
+	return func(h http.Handler) http.Handler {
+		return &middleware{h, handlers}
+	}
 }

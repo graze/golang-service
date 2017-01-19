@@ -25,7 +25,7 @@ http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 })
 
 recoverer = recovery.New(echoHandler)
-http.ListenAndServe(":80", recoverer.Handle)
+http.ListenAndServe(":80", recoverer)
 ```
 
 ## Logging Panic Handler:

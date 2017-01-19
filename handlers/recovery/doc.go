@@ -29,7 +29,7 @@ recovery provides an http.Handler for use with http middleware
     })
 
     recoverer = recovery.New(echoHandler)
-    http.ListenAndServe(":80", recoverer.Handle)
+    http.ListenAndServe(":80", recoverer)
 
 Logging Panic Handler
 
