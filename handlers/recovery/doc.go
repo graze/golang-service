@@ -24,14 +24,12 @@ Example Handler:
 
 recovery provides an http.Handler for use with http middleware
 
-```go
-http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-	panic("uh-oh")
-})
+    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        panic("uh-oh")
+    })
 
-recoverer = recovery.New(echoHandler)
-http.ListenAndServe(":80", recoverer.Handle)
-```
+    recoverer = recovery.New(echoHandler)
+    http.ListenAndServe(":80", recoverer.Handle)
 
 Logging Panic Handler
 
