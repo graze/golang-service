@@ -20,7 +20,7 @@ cli: ## Open a shell to the docker environment
 
 test: ver ?= alpine
 test: ## Run the tests
-	docker run --rm -v $(PWD):${MOUNT} -w ${MOUNT} golang:${ver} go test ${CODE}
+	docker run --rm -v $$(pwd):${MOUNT} -w ${MOUNT} golang:${ver} go test ${CODE}
 
 doc: ## Build API documentation
 	${DOCKER_CMD} godoc github.com/graze/golang-service
