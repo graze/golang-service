@@ -11,6 +11,8 @@ You can create custom handlers to do something when a panic occurs:
 
 **Example Handler:**
 
+A simple handler would be to return the error text to the user in the body of the response:
+
 ```go
 echoHandler := recovery.HandlerFunc(func (w io.Writer, r *http.Request, err error, status int) {
     w.Write([]byte(err.Error()))
@@ -18,6 +20,8 @@ echoHandler := recovery.HandlerFunc(func (w io.Writer, r *http.Request, err erro
 ```
 
 **Usage as an http handler:**
+
+The recovery middleware can then be used as an http.Handler as `recovery.New` will return a `func(h http.Handler) http.Handler` allowing it to be chained together with other handlers.
 
 ```go
 http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
