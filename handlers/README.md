@@ -6,6 +6,13 @@ Collection of middleware handlers for use by HTTP services
 $ go get github.com/graze/golang-service/handlers
 ```
 
+- [Context](#context-adder) - Adds some request and other context to the logger
+- [Healthd](#healthd-logger) - Output healthd formatted output for use with AWS Elastic Beanstalk
+- [Statsd](#statsd-logger) - Output request information to statsd
+- [Structured Log](#structured-request-logger) - Output a structured log message with the information from this requiest
+- [Authentication](auth/README.md) - Service authentication
+- [Recovery](recovery/README.md) - Recover from panics and handle it nicely
+
 ## Context Adder
 
 `log` a logging context is stored within the request context.
@@ -101,75 +108,4 @@ http.ListenAndServe(":1123", loggedRouter)
 Default Output:
 ```
 time="2016-10-28T10:51:32Z" level=info msg="GET / HTTP/1.1" dur=0.003200881 http.bytes=80 http.host="localhost:1123" http.method=GET http.path="/" http.protocol="HTTP/1.1" http.ref= http.status=200 http.uri="/" http.user= module=request.handler tag="request_handled" ts="2016-10-28T10:51:31.542424381Z"
-```
-
-## Authentication Handler
-
-```bash
-$ go get github.com/graze/golang-service/handlers/auth
-```
-
-### API Key Authentication
-
-Adds authentication to the request using middleware, with the benefit of linking the authentication with a user
-
-```http
-GET / HTTP/1.1
-Host: service.example.com
-Content-Type: application/json
-Authorization: Graze hzYAVO9Sg98nsNh81M84O2kyXVy6K1xwHD8
-```
-
-```go
-func finder(creds interface{}, r *http.Request) (interface{}, error) {
-    key, ok := creds.(string)
-    if !ok {
-        return nil, fmt.Error("Invalid credentials format, expecting string")
-    }
-    user, ok := users[key]
-    if !ok {
-        return nil, fmt.Errorf("No user found for: %s", key)
-    }
-    return user, nil
-}
-
-func onError(w http.ResponseWriter, r *http.Request, err error, status int) {
-    w.WriteHeader(status)
-    fmt.Fprintf(w, err.Error())
-}
-
-keyAuth := auth.NewAPIKey("Graze", auth.FinderFunc(finder), onError)
-
-http.Handle("/", keyAuth.Next(router))
-```
-
-### X-Api-Key Authentication
-
-The header key: `X-Api-Key` can also be used for authentication by simply providing the key as the value of the header.
-
-```http
-GET / HTTP/1.1
-Host: service.example.com
-Content-Type: application/json
-x-api-key: hzYAVO9Sg98nsNh81M84O2kyXVy6K1xwHD8
-```
-
-The same Finder and methods can be used
-
-```go
-keyAuth := auth.NewXAPIKey(auth.FinderFunc(finder), onError)
-```
-
-### User Retrieval
-
-You can then retrieve the user within the request handler:
-
-```go
-func GetList(w http.ResponseWriter, r *http.Request) {
-    user, ok := auth.GetUser(r).(*account.User)
-    if !ok {
-        w.WriteHeader(403)
-        return
-    }
-}
 ```

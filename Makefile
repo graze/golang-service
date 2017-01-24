@@ -5,7 +5,7 @@
 
 DOCKER_CMD=docker-compose run --rm tools
 MOUNT=/go/src/github.com/graze/golang-service
-CODE=./handlers ./handlers/auth ./log ./metrics ./nettest ./validate
+CODE=./handlers ./handlers/auth ./handlers/recovery ./log ./metrics ./nettest ./validate
 
 install: ## Install the dependencies
 	rm -rf vendor
@@ -20,7 +20,7 @@ cli: ## Open a shell to the docker environment
 
 test: ver ?= alpine
 test: ## Run the tests
-	docker run --rm -it -v $(PWD):${MOUNT} -w ${MOUNT} golang:${ver} go test ${CODE}
+	docker run --rm -v $$(pwd):${MOUNT} -w ${MOUNT} golang:${ver} go test ${CODE}
 
 doc: ## Build API documentation
 	${DOCKER_CMD} godoc github.com/graze/golang-service
