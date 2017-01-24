@@ -14,10 +14,9 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-)
 
-// FailHandler gets called if the handler found an error with the Authorization
-type FailHandler func(w http.ResponseWriter, r *http.Request, err error, status int)
+	"github.com/graze/golang-service/handlers/failure"
+)
 
 // APIKey contains a wrapper around a handler to provide authentication
 //
@@ -31,7 +30,7 @@ type APIKey struct {
 	// Validator takes the provided <apiKey> and returns a user object or error if the key is invalid
 	Finder Finder
 	// OnError gets called if the request is unauthorized or forbidden
-	OnError FailHandler
+	OnError failure.Handler
 }
 
 type (
@@ -123,25 +122,25 @@ func (a *APIKey) Handler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		header := req.Header["Authorization"]
 		if len(header) == 0 {
-			a.OnError(w, req, &NoHeaderError{}, http.StatusUnauthorized)
+			a.OnError.Handle(w, req, &NoHeaderError{}, http.StatusUnauthorized)
 			return
 		}
 
 		parts := strings.Split(header[0], " ")
 		if len(parts) != 2 {
-			a.OnError(w, req, &InvalidFormatError{"<provider> <apiKey>", header[0]}, http.StatusUnauthorized)
+			a.OnError.Handle(w, req, &InvalidFormatError{"<provider> <apiKey>", header[0]}, http.StatusUnauthorized)
 			return
 		}
 
 		provider, value := parts[0], parts[1]
 		if provider != a.Provider {
-			a.OnError(w, req, &BadProviderError{provider, a.Provider}, http.StatusUnauthorized)
+			a.OnError.Handle(w, req, &BadProviderError{provider, a.Provider}, http.StatusUnauthorized)
 			return
 		}
 
 		user, err := a.Finder.Find(value, req)
 		if err != nil {
-			a.OnError(w, req, &InvalidKeyError{value, err}, http.StatusUnauthorized)
+			a.OnError.Handle(w, req, &InvalidKeyError{value, err}, http.StatusUnauthorized)
 			return
 		}
 		req = saveUser(req, user)
@@ -151,6 +150,6 @@ func (a *APIKey) Handler(h http.Handler) http.Handler {
 }
 
 // NewAPIKey returns an APIKey struct that has a Handle method to provide authentication to your service
-func NewAPIKey(provider string, finder Finder, onError FailHandler) *APIKey {
+func NewAPIKey(provider string, finder Finder, onError failure.Handler) *APIKey {
 	return &APIKey{provider, finder, onError}
 }

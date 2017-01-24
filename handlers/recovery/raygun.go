@@ -11,10 +11,10 @@
 package recovery
 
 import (
-	"io"
 	"net/http"
 
 	"github.com/MindscapeHQ/raygun4go"
+	"github.com/graze/golang-service/handlers/failure"
 	"github.com/graze/golang-service/log"
 )
 
@@ -31,13 +31,13 @@ type raygunRecoverer struct {
 }
 
 // Recover creates a new raygun client each time as the details of each error will change per request
-func (l raygunRecoverer) Handle(w io.Writer, r *http.Request, err error, status int) {
+func (l raygunRecoverer) Handle(w http.ResponseWriter, r *http.Request, err error, status int) {
 	l.client.Request(r)
 	l.client.CustomData(log.Ctx(r.Context()).Fields())
 	l.client.CreateError(err.Error())
 }
 
 // Raygun creates a Raygun Recoverer given the details
-func Raygun(client raygunClient) Handler {
+func Raygun(client raygunClient) failure.Handler {
 	return &raygunRecoverer{client}
 }

@@ -44,7 +44,7 @@ Authorization: Graze hzYAVO9Sg98nsNh81M84O2kyXVy6K1xwHD8
 ```
 
 ```go
-keyAuth := auth.NewAPIKey("Graze", auth.FinderFunc(finder), onError)
+keyAuth := auth.NewAPIKey("Graze", auth.FinderFunc(finder), failure.HandlerFunc(onError))
 
 http.Handle("/", keyAuth.Next(router))
 ```
@@ -63,7 +63,7 @@ x-api-key: hzYAVO9Sg98nsNh81M84O2kyXVy6K1xwHD8
 The same Finder and methods can be used
 
 ```go
-keyAuth := auth.NewXAPIKey(auth.FinderFunc(finder), onError)
+keyAuth := auth.NewXAPIKey(auth.FinderFunc(finder), failure.HandlerFunc(onError))
 
 http.Handle("/", keyAuth.Next(router))
 ```

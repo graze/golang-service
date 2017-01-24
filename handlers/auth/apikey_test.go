@@ -16,6 +16,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/graze/golang-service/handlers/failure"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -97,10 +98,10 @@ func TestApiKeyAuthErrors(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	for k, tc := range cases {
-		auth := NewAPIKey(tc.provider, tc.finder, func(w http.ResponseWriter, r *http.Request, err error, status int) {
+		auth := NewAPIKey(tc.provider, tc.finder, failure.HandlerFunc(func(w http.ResponseWriter, r *http.Request, err error, status int) {
 			assert.IsType(t, tc.err, err, "test: %s", k)
 			assert.Equal(t, tc.status, status, "test: %s", k)
-		})
+		}))
 		handler := auth.Then(okHandler)
 		handler.ServeHTTP(rec, tc.request)
 	}
@@ -140,9 +141,9 @@ func TestValidAPIKeyAuth(t *testing.T) {
 	rec := httptest.NewRecorder()
 
 	for k, tc := range cases {
-		auth := NewAPIKey(tc.provider, tc.finder, func(w http.ResponseWriter, r *http.Request, err error, status int) {
+		auth := NewAPIKey(tc.provider, tc.finder, failure.HandlerFunc(func(w http.ResponseWriter, r *http.Request, err error, status int) {
 			t.Errorf("onError handler called. Err: %s, Status: %d, Test: %s", err, status, k)
-		})
+		}))
 
 		baseHandler := func(w http.ResponseWriter, req *http.Request) {
 			user := GetUser(req)

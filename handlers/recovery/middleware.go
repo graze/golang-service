@@ -12,29 +12,15 @@ package recovery
 
 import (
 	"errors"
-	"io"
 	"net/http"
+
+	"github.com/graze/golang-service/handlers/failure"
 )
-
-// Handler handlers a panic panic and does something (outputs to w, logs, reports to third party, etc)
-//
-// Note that multiple Recoverers could write to w
-type Handler interface {
-	Handle(w io.Writer, r *http.Request, err error, status int)
-}
-
-// HandlerFunc provides a simple function to handle when a http.Handler panic occours
-type HandlerFunc func(io.Writer, *http.Request, error, int)
-
-// Handle implements the Handler interface for a HandlerFunc
-func (f HandlerFunc) Handle(w io.Writer, r *http.Request, err error, status int) {
-	f(w, r, err, status)
-}
 
 // middleware provides a Handle method that implements http.Handler, and can be used with other http handler middlewares
 type middleware struct {
 	next     http.Handler
-	handlers []Handler
+	handlers []failure.Handler
 }
 
 // Handle returns a middleware http.Handler to be used when handling requests
@@ -73,7 +59,7 @@ func (m *middleware) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // 	}
 // 	recoverer := recovery.New(panic.Logger(log.New()), raygun.New(raygunClient), panic.HandlerFunc(format))
 // 	http.ListenAndServe(":80", recoverer(r))
-func New(handlers ...Handler) func(h http.Handler) http.Handler {
+func New(handlers ...failure.Handler) func(h http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return &middleware{h, handlers}
 	}
