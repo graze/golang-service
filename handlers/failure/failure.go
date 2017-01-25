@@ -23,6 +23,7 @@ The HandlerFunc converts a function to a Handler interface
 
     errorHandler = failure.Handler(func(w http.ResponseWriter, r *http.Request, err error, status int) {
         w.WriteHeader(status)
+        w.Headers().Set('x-error','some error')
         w.Write([]byte(err.Error()))
     })
 */
@@ -30,14 +31,12 @@ package failure
 
 import "net/http"
 
-// Handler handlers a panic panic and does something (outputs to w, logs, reports to third party, etc)
-//
-// Note that multiple Recoverers could write to w
+// Handler handlers an error state and does something (outputs to w, logs, reports to third party, etc)
 type Handler interface {
 	Handle(w http.ResponseWriter, r *http.Request, err error, status int)
 }
 
-// HandlerFunc provides a simple function to handle when a http.Handler panic occours
+// HandlerFunc provides a simple function to convert it into a failure.Handler
 type HandlerFunc func(http.ResponseWriter, *http.Request, error, int)
 
 // Handle implements the Handler interface for a HandlerFunc
