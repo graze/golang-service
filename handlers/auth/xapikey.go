@@ -10,7 +10,11 @@
 
 package auth
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/graze/golang-service/handlers/failure"
+)
 
 // XAPIKey contains a wrapper around a handler to provide authentication using the X-Api-Key header
 //
@@ -20,7 +24,7 @@ type XAPIKey struct {
 	// Validator takes the provided <apiKey> and returns a user object or error if the key is invalid
 	Finder Finder
 	// OnError gets called if the request is unauthorized or forbidden
-	OnError FailHandler
+	OnError failure.Handler
 }
 
 // ThenFunc surrounds an existing handler func and returns a new http.Handler
@@ -82,13 +86,13 @@ func (x *XAPIKey) Handler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		header := req.Header["X-Api-Key"]
 		if len(header) == 0 {
-			x.OnError(w, req, &NoHeaderError{}, http.StatusUnauthorized)
+			x.OnError.Handle(w, req, &NoHeaderError{}, http.StatusUnauthorized)
 			return
 		}
 
 		user, err := x.Finder.Find(header[0], req)
 		if err != nil {
-			x.OnError(w, req, &InvalidKeyError{header[0], err}, http.StatusUnauthorized)
+			x.OnError.Handle(w, req, &InvalidKeyError{header[0], err}, http.StatusUnauthorized)
 			return
 		}
 		req = saveUser(req, user)
@@ -98,6 +102,6 @@ func (x *XAPIKey) Handler(h http.Handler) http.Handler {
 }
 
 // NewXAPIKey returns an APIKey struct that has a Handle method to provide authentication to your service
-func NewXAPIKey(finder Finder, onError FailHandler) *XAPIKey {
+func NewXAPIKey(finder Finder, onError failure.Handler) *XAPIKey {
 	return &XAPIKey{finder, onError}
 }

@@ -14,7 +14,7 @@ You can create custom handlers to do something when a panic occurs:
 A simple handler would be to return the error text to the user in the body of the response:
 
 ```go
-echoHandler := recovery.HandlerFunc(func (w io.Writer, r *http.Request, err error, status int) {
+echoHandler := failure.HandlerFunc(func (w io.Writer, r *http.Request, err error, status int) {
     w.Write([]byte(err.Error()))
 })
 ```

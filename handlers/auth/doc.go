@@ -46,7 +46,7 @@ Authorization Bearer Api Key Auth
 For a basic api key based authentication. It directly passes the apiKey as a the credentials to the Finder.Func method
 
 Usage:
-    keyAuth := auth.NewAPIKey("Graze", auth.FinderFunc(finder), onError)
+    keyAuth := auth.NewAPIKey("Graze", auth.FinderFunc(finder), failure.HandlerFunc(onError))
 
     http.Handle("/", keyAuth.Next(router))
 
@@ -56,7 +56,7 @@ Almost identical to the Authorization header, is using the X-Api-Key header to s
 It uses the same Finder and onError.
 
 Usage:
-    keyAuth := auth.NewXApiKey(auth.FinderFunc(finder), onError)
+    keyAuth := auth.NewXApiKey(auth.FinderFunc(finder), failure.HandlerFunc(onError))
 
     http.Handle("/", keyAuth.Next(router))
 

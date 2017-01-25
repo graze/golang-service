@@ -10,8 +10,8 @@ Authentication provides a little bit of security to your service.
 
 Some common components are available during authentication:
 
-- `finder` (`Finder`) - Asks the application (you) if a supplied set of credentials are valid
-- `onError` (`FailHandler`) - When an error occurs during authentication, this is called so the application (you again) can handle it nicely
+- `finder` (`auth.Finder`) - Asks the application (you) if a supplied set of credentials are valid
+- `onError` (`failure.Handler`) - When an error occurs during authentication this is called. Then the application (you again) can handle it nicely
 
 ```go
 func finder(creds interface{}, r *http.Request) (interface{}, error) {
@@ -44,7 +44,7 @@ Authorization: Graze hzYAVO9Sg98nsNh81M84O2kyXVy6K1xwHD8
 ```
 
 ```go
-keyAuth := auth.NewAPIKey("Graze", auth.FinderFunc(finder), onError)
+keyAuth := auth.NewAPIKey("Graze", auth.FinderFunc(finder), failure.HandlerFunc(onError))
 
 http.Handle("/", keyAuth.Next(router))
 ```
@@ -63,7 +63,7 @@ x-api-key: hzYAVO9Sg98nsNh81M84O2kyXVy6K1xwHD8
 The same Finder and methods can be used
 
 ```go
-keyAuth := auth.NewXAPIKey(auth.FinderFunc(finder), onError)
+keyAuth := auth.NewXAPIKey(auth.FinderFunc(finder), failure.HandlerFunc(onError))
 
 http.Handle("/", keyAuth.Next(router))
 ```

@@ -11,11 +11,11 @@
 package recovery
 
 import (
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/graze/golang-service/handlers/failure"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,7 +27,7 @@ var panicHandler = http.HandlerFunc(func(w http.ResponseWriter, req *http.Reques
 	panic("oh no!")
 })
 
-var echoRecoverer = HandlerFunc(func(w io.Writer, r *http.Request, err error, status int) {
+var echoRecoverer = failure.HandlerFunc(func(w http.ResponseWriter, r *http.Request, err error, status int) {
 	w.Write([]byte(err.Error()))
 })
 
@@ -52,17 +52,17 @@ func TestHandlerCallsNextHandlerWhenNoPanicOccours(t *testing.T) {
 
 func TestPanics(t *testing.T) {
 	cases := map[string]struct {
-		handlers []Handler
+		handlers []failure.Handler
 		body     string
 		status   int
 	}{
 		"echo": {
-			[]Handler{echoRecoverer},
+			[]failure.Handler{echoRecoverer},
 			"oh no!",
 			http.StatusInternalServerError,
 		},
 		"multiple": {
-			[]Handler{echoRecoverer, echoRecoverer},
+			[]failure.Handler{echoRecoverer, echoRecoverer},
 			"oh no!oh no!",
 			http.StatusInternalServerError,
 		},

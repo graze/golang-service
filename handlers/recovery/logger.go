@@ -11,10 +11,10 @@
 package recovery
 
 import (
-	"io"
 	"net/http"
 	"runtime/debug"
 
+	"github.com/graze/golang-service/handlers/failure"
 	"github.com/graze/golang-service/log"
 )
 
@@ -24,7 +24,7 @@ type panicLogger struct {
 }
 
 // Logger takes a panic event and writes a stack trace to the log
-func (l panicLogger) Handle(w io.Writer, r *http.Request, err error, status int) {
+func (l panicLogger) Handle(w http.ResponseWriter, r *http.Request, err error, status int) {
 	l.logger.Ctx(r.Context()).With(log.KV{
 		"tag":    "critical_error",
 		"stack":  debug.Stack(),
@@ -48,6 +48,6 @@ func (l panicLogger) Handle(w io.Writer, r *http.Request, err error, status int)
 //  logPanic := recovery.PanicLogger(logger.With(log.KV{"module":"panic.handler"}))
 //  recoverer := recovery.New(logPanic)
 //  http.ListenAndServe(":80", recoverer.Handle(r))
-func PanicLogger(logger log.FieldLogger) Handler {
+func PanicLogger(logger log.FieldLogger) failure.Handler {
 	return &panicLogger{logger}
 }
