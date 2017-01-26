@@ -28,6 +28,7 @@ var panicHandler = http.HandlerFunc(func(w http.ResponseWriter, req *http.Reques
 })
 
 var echoRecoverer = failure.HandlerFunc(func(w http.ResponseWriter, r *http.Request, err error, status int) {
+	w.WriteHeader(status)
 	w.Write([]byte(err.Error()))
 })
 

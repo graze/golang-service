@@ -32,7 +32,6 @@ func (m *middleware) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 				err = errors.New(e.(string))
 			}
 
-			w.WriteHeader(http.StatusInternalServerError)
 			for _, r := range m.handlers {
 				r.Handle(w, req, err, http.StatusInternalServerError)
 			}

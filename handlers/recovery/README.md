@@ -32,6 +32,17 @@ recoverer = recovery.New(echoHandler)
 http.ListenAndServe(":80", recoverer)
 ```
 
+When calling each handler, recovery will pass http.StatusInternalServerError as the status, but it
+won't write the header to allow other handlers to write their own headers. You'll need do something like:
+
+```go
+fiveHundredHandler = failure.HandlerFunc(func (w http.ResponseWriter, r *http.Request, err error, status int) {
+    w.writeHeader(status)
+}))
+```
+
+You can of course write a different status should you so choose.
+
 ## Logging Panic Handler:
 
 The logging Recoverer will log an output of the recovered panic for debugging.
