@@ -17,7 +17,6 @@ import (
 	"time"
 
 	"github.com/DataDog/datadog-go/statsd"
-	"github.com/graze/golang-service/metrics"
 )
 
 type statsdHandler struct {
@@ -50,7 +49,7 @@ func writeStatsdLog(w *statsd.Client, req *http.Request, url url.URL, ts time.Ti
 	w.Incr("request.count", tags, 1)
 }
 
-// StatsdIoHandler returns a http.Handler that wraps h and logs request to statsd
+// StatsdHandler returns a http.Handler that wraps h and logs request to statsd
 //
 // Example:
 //
@@ -62,23 +61,6 @@ func writeStatsdLog(w *statsd.Client, req *http.Request, url url.URL, ts time.Ti
 //  loggedRouter := handlers.StatsdHandler(c, r)
 //  http.ListenAndServe(":1123", loggedRouter)
 //
-func StatsdIoHandler(out *statsd.Client, h http.Handler) http.Handler {
+func StatsdHandler(out *statsd.Client, h http.Handler) http.Handler {
 	return statsdHandler{out, h}
-}
-
-// StatsdHandler returns a handlers.StatsdHandler to write request and response informtion to statsd
-//
-// Usage:
-// 	r := mux.NewRouter()
-// 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-// 	   w.Write([]byte("This is a catch-all route"))
-// 	})
-// 	loggedRouter := handlers.StatsdHandler(r)
-// 	http.ListenAndServe(":1123", loggedRouter)
-func StatsdHandler(h http.Handler) http.Handler {
-	client, err := metrics.GetStatsdFromEnv()
-	if err != nil {
-		panic(err)
-	}
-	return StatsdIoHandler(client, h)
 }

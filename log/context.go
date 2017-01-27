@@ -13,16 +13,12 @@ package log
 import (
 	"context"
 	"io"
-	"os"
 
 	"github.com/Sirupsen/logrus"
 )
 
 var (
-	logEntry  = New()
-	appName   = "LOG_APPLICATION"
-	envName   = "ENVIRONMENT"
-	levelName = "LOG_LEVEL"
+	logEntry = New()
 )
 
 // key is a type to ensure unique key for context
@@ -159,27 +155,8 @@ func (c *LoggerEntry) AddHook(hook logrus.Hook) {
 }
 
 // New creates a new FieldLogger with a new Logger (formatter, level, output, hooks)
-func New() (entry *LoggerEntry) {
+func New() (logger *LoggerEntry) {
 	base := logrus.New()
-	logger := &LoggerEntry{logrus.NewEntry(base)}
-	fields := make(KV)
-	if app := os.Getenv(appName); app != "" {
-		fields["app"] = app
-	}
-	if env := os.Getenv(envName); env != "" {
-		fields["env"] = env
-	}
-	if level := os.Getenv(levelName); level != "" {
-		if l, err := logrus.ParseLevel(level); err == nil {
-			logger.SetLevel(l)
-		} else {
-			logger.Err(err).With(KV{
-				"module":   "log_initialisation",
-				"tag":      "log_new_failed",
-				"logLevel": level,
-			}).Error("The supplied log level is invalid")
-		}
-	}
-	entry, _ = logger.With(fields).(*LoggerEntry)
+	logger = &LoggerEntry{logrus.NewEntry(base)}
 	return
 }

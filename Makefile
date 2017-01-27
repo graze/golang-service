@@ -3,9 +3,9 @@
 
 .DEFAULT_GOAL=help
 
-DOCKER_CMD=docker-compose run --rm tools
 MOUNT=/go/src/github.com/graze/golang-service
-CODE=./handlers ./handlers/auth ./handlers/recovery ./log ./metrics ./nettest ./validate
+DOCKER_CMD=docker run --rm -v $$(pwd):${MOUNT} -w ${MOUNT} graze/golang-tools
+CODE=./handlers ./handlers/auth ./handlers/recovery ./log ./nettest ./validate
 
 install: ## Install the dependencies
 	rm -rf vendor
@@ -28,13 +28,11 @@ doc: ## Build API documentation
 lint: ## Run gofmt and goimports in lint mode
 	${DOCKER_CMD} golint -set_exit_status ./handlers/...
 	${DOCKER_CMD} golint -set_exit_status ./log/...
-	${DOCKER_CMD} golint -set_exit_status ./metrics/...
 	${DOCKER_CMD} golint -set_exit_status ./nettest/...
 	${DOCKER_CMD} golint -set_exit_status ./validate/...
 	${DOCKER_CMD} golint -set_exit_status ./
 	${DOCKER_CMD} go tool vet ./handlers
 	${DOCKER_CMD} go tool vet ./log
-	${DOCKER_CMD} go tool vet ./metrics
 	${DOCKER_CMD} go tool vet ./nettest
 	${DOCKER_CMD} go tool vet ./validate
 

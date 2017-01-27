@@ -12,10 +12,8 @@ package log
 
 import (
 	"context"
-	"os"
 	"testing"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/Sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 )
@@ -66,48 +64,6 @@ func testImplements(t *testing.T) {
 
 	global := With(KV{"k": "v"})
 	assert.Implements(t, (*FieldLogger)(nil), global)
-}
-
-func TestNewWithValidLogLevels(t *testing.T) {
-	cases := map[string]struct {
-		level    string
-		expected logrus.Level
-	}{
-		"blank":      {"", logrus.InfoLevel},
-		"lower case": {"info", logrus.InfoLevel},
-		"upper case": {"INFO", logrus.InfoLevel},
-		"mixed case": {"InFo", logrus.InfoLevel},
-		"debug":      {"debug", logrus.DebugLevel},
-		"panic":      {"panic", logrus.PanicLevel},
-		"warn":       {"warn", logrus.WarnLevel},
-		"warning":    {"warning", logrus.WarnLevel},
-		"fatal":      {"fatal", logrus.FatalLevel},
-		"error":      {"error", logrus.ErrorLevel},
-	}
-
-	for k, tc := range cases {
-		os.Setenv("LOG_LEVEL", tc.level)
-		logger := New()
-		assert.Equal(t, tc.expected, logger.Level(), "test: %s", k)
-	}
-	os.Setenv("LOG_LEVEL", "")
-}
-
-func TestNewWithInvalidLogLEvels(t *testing.T) {
-	cases := map[string]struct {
-		level    string
-		expected logrus.Level
-	}{
-		"plural": {"infos", logrus.InfoLevel},
-		"crit":   {"crit", logrus.InfoLevel},
-	}
-
-	for k, tc := range cases {
-		os.Setenv("LOG_LEVEL", tc.level)
-		logger := New()
-		assert.Equal(t, tc.expected, logger.Level(), "test: %s", k)
-	}
-	os.Setenv("LOG_LEVEL", "")
 }
 
 func testAppendContext(t *testing.T) {

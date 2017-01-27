@@ -131,12 +131,16 @@ func TestStatsdHandler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	os.Setenv("STATSD_HOST", host)
-	os.Setenv("STATSD_PORT", port)
-	os.Setenv("STATSD_NAMESPACE", "service.test.")
-	os.Setenv("STATSD_TAGS", "tag1,tag2:value")
 
-	handler := StatsdHandler(okHandler)
+	client, err := statsd.New(host + ":" + port)
+	if err != nil {
+		t.Error(err)
+	}
+
+	client.Namespace = "service.test."
+	client.Tags = append(client.Tags, []string{"tag1", "tag2:value"}...)
+
+	handler := StatsdHandler(client, okHandler)
 
 	for k, tc := range tests {
 		rec := httptest.NewRecorder()

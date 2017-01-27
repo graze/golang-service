@@ -38,23 +38,6 @@ func TestLogging(t *testing.T) {
 	assert.Equal(t, 2, hook.LastEntry().Data["variable"])
 }
 
-func TestEnvironment(t *testing.T) {
-	os.Setenv("LOG_APPLICATION", "some_app")
-	os.Setenv("ENVIRONMENT", "test")
-
-	logger := New()
-	hook := test.NewLocal(logger.Logger)
-
-	logger.Info("some text")
-	assert.Equal(t, 1, len(hook.Entries))
-	assert.Equal(t, "some text", hook.LastEntry().Message)
-	assert.Equal(t, "some_app", hook.LastEntry().Data["app"])
-	assert.Equal(t, "test", hook.LastEntry().Data["env"])
-
-	os.Setenv("LOG_APPLICATION", "")
-	os.Setenv("ENVIRONMENT", "")
-}
-
 func TestGlobalConfiguration(t *testing.T) {
 	SetOutput(os.Stdout)
 	SetLevel(DebugLevel)

@@ -15,8 +15,6 @@ golangservice contains the following packages:
 
 The log package provides some logging helpers for structured contextual logs
 
-The metrics package prodives helpers for statsd
-
 The handlers package provides a set of handlers that handle http.Request log the results
 
 The nettest package provides a set of helpers for use when testing networks
