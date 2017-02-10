@@ -58,7 +58,7 @@ type Validatable interface {
 // the Validatable variable will get populated with the contents of the body provided by *http.Request
 //
 // The base set of error types returned from this method are:
-// 	validate.IOError
+// 	*validate.IOError
 //  *json.SyntaxError
 //	*json.UnmarshalFieldError
 //	*json.UnmarshalTypeError
@@ -84,14 +84,19 @@ type Validatable interface {
 //		}
 //	}
 func JSONRequest(ctx context.Context, r *http.Request, v Validatable) error {
-	return Reader(ctx, r.Body, json.Unmarshal, v)
+	return Reader(ctx, r.Body, func(data []byte, v interface{}) error {
+		if len(data) == 0 {
+			data = []byte("{}")
+		}
+		return json.Unmarshal(data, v)
+	}, v)
 }
 
 // XMLRequest takes an http request docodes the xml into an item and validates the provided item
 //
 // The base set of error types returned from this method are:
-// 	validate.IOError
-//  *xml.SyntaxError
+// 	*validate.IOError
+// 	*xml.SyntaxError
 //	*xml.TagPathError
 //	*xml.UnmarshalError
 func XMLRequest(ctx context.Context, r *http.Request, v Validatable) error {
@@ -107,7 +112,7 @@ func XMLRequest(ctx context.Context, r *http.Request, v Validatable) error {
 //		Description string `json:"description"`
 //	}
 //
-//  func (i *ApiInput) Validate(ctx context.Context) error {
+// 	func (i *ApiInput) Validate(ctx context.Context) error {
 //		if utf8.RuneCountInString(i.Name) == 0 {
 //			return fmt.Errorf("the field: name must be provided and not empty")
 //		}

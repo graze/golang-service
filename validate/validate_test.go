@@ -38,6 +38,12 @@ type XMLStruct struct {
 	Drinks int    `XmlName:"drinks"`
 }
 
+type emptyStruct struct{}
+
+func (s *emptyStruct) Validate(ctx context.Context) error {
+	return nil
+}
+
 func (x *XMLStruct) Validate(ctx context.Context) error {
 	return nil
 }
@@ -131,6 +137,12 @@ func TestJsonRequest(t *testing.T) {
 }
 }`),
 			&TypesStruct{},
+			false,
+			"",
+		},
+		"empty": {
+			newRequest(t, "POST", "/thing", ``),
+			&emptyStruct{},
 			false,
 			"",
 		},
