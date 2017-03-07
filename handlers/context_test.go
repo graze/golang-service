@@ -176,7 +176,8 @@ func TestContextUpdatesTheRequestContext(t *testing.T) {
 			w.Write([]byte("ok\n"))
 		})
 
-		handler := LogContextHandler(beforeHandler)
+		logger := log.New("", "", "")
+		handler := LoggingContextHandler(logger, beforeHandler)
 		handler.ServeHTTP(rec, tc.request)
 	}
 }

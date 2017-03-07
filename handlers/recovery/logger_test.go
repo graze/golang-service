@@ -22,7 +22,7 @@ import (
 )
 
 func TestLogger(t *testing.T) {
-	logger := log.New()
+	logger := log.New("", "", "")
 	logger.SetLevel(logrus.DebugLevel)
 	hook := test.NewLocal(logger.Logger)
 

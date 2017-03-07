@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/DataDog/datadog-go/statsd"
+	"github.com/graze/golang-service/metrics"
 	"github.com/graze/golang-service/nettest"
 	"github.com/stretchr/testify/assert"
 )
@@ -131,12 +132,14 @@ func TestStatsdHandler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	os.Setenv("STATSD_HOST", host)
-	os.Setenv("STATSD_PORT", port)
-	os.Setenv("STATSD_NAMESPACE", "service.test.")
-	os.Setenv("STATSD_TAGS", "tag1,tag2:value")
 
-	handler := StatsdHandler(okHandler)
+	c := metrics.StatsdClientConf{
+		host,
+		port,
+		"service.test.",
+		[]string{"tag1", "tag2:value"},
+	}
+	handler := NewStatsdHandler(c)(okHandler)
 
 	for k, tc := range tests {
 		rec := httptest.NewRecorder()

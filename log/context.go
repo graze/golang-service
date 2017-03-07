@@ -13,13 +13,12 @@ package log
 import (
 	"context"
 	"io"
-	"os"
 
 	"github.com/Sirupsen/logrus"
 )
 
 var (
-	logEntry  = New()
+	logEntry  = New("", "", "")
 	appName   = "LOG_APPLICATION"
 	envName   = "ENVIRONMENT"
 	levelName = "LOG_LEVEL"
@@ -159,17 +158,17 @@ func (c *LoggerEntry) AddHook(hook logrus.Hook) {
 }
 
 // New creates a new FieldLogger with a new Logger (formatter, level, output, hooks)
-func New() (entry *LoggerEntry) {
+func New(appName string, env string, level string) (entry *LoggerEntry) {
 	base := logrus.New()
 	logger := &LoggerEntry{logrus.NewEntry(base)}
 	fields := make(KV)
-	if app := os.Getenv(appName); app != "" {
-		fields["app"] = app
+	if appName != "" {
+		fields["app"] = appName
 	}
-	if env := os.Getenv(envName); env != "" {
+	if env != "" {
 		fields["env"] = env
 	}
-	if level := os.Getenv(levelName); level != "" {
+	if level != "" {
 		if l, err := logrus.ParseLevel(level); err == nil {
 			logger.SetLevel(l)
 		} else {

@@ -66,19 +66,21 @@ func StatsdIoHandler(out *statsd.Client, h http.Handler) http.Handler {
 	return statsdHandler{out, h}
 }
 
-// StatsdHandler returns a handlers.StatsdHandler to write request and response informtion to statsd
+// NewStatsdHandler returns a handlers.StatsdHandler to write request and response informtion to statsd
 //
 // Usage:
 // 	r := mux.NewRouter()
 // 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 // 	   w.Write([]byte("This is a catch-all route"))
 // 	})
-// 	loggedRouter := handlers.StatsdHandler(r)
+// 	loggedRouter := handlers.NewStatsdHandler(c)
 // 	http.ListenAndServe(":1123", loggedRouter)
-func StatsdHandler(h http.Handler) http.Handler {
-	client, err := metrics.GetStatsdFromEnv()
-	if err != nil {
-		panic(err)
+func NewStatsdHandler(c metrics.StatsdClientConf) func(h http.Handler) http.Handler {
+	return func(h http.Handler) http.Handler {
+		client, err := metrics.GetStatsd(c)
+		if err != nil {
+			panic(err)
+		}
+		return StatsdIoHandler(client, h)
 	}
-	return StatsdIoHandler(client, h)
 }

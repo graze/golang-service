@@ -220,7 +220,7 @@ func TestStructuredLogging(t *testing.T) {
 		},
 	}
 
-	logger := log.New().With(log.KV{"transaction": "test-123"})
+	logger := log.New("", "", "").With(log.KV{"transaction": "test-123"})
 	base, ok := logger.(*log.LoggerEntry)
 	if !ok {
 		t.Error("Unable to cast logger to log.LoggerEntry")

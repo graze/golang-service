@@ -46,7 +46,7 @@ It is also possible to create a new logger ignoring the global configuration set
 create a new instance of a logger which can be passed around and used with other methods
 
     // create a fresh context using defaults (ignores the global logger properties set above)
-    logger := log.New()
+    logger := log.New("appName", "env", "level")
     logger.Add(log.KV{
         "module": "request_handler"
     })
@@ -63,7 +63,7 @@ create a new instance of a logger which can be passed around and used with other
 When a new logger is created, the format and output can be modified to change the how messages passed to this logger
 are logged
 
-    logger := log.New()
+    logger := log.New("appName", "env", "level")
     logger.SetFormatter(&logrus.JSONFormatter{})
     logger.SetLevel(log.DebugLevel)
     logger.SetOutput(os.Stdout)
@@ -74,7 +74,7 @@ are logged
 
 This logger supports golang's `Context`. You can create a new context and use an existing context as such
 
-    logger := log.New()
+    logger := log.New("appName", "env", "level")
     logger.Add(log.KV{"key":"value"})
     ctx := logger.NewContext(context.Background())
 
@@ -84,11 +84,11 @@ This logger supports golang's `Context`. You can create a new context and use an
 
 You can use a logging context stored within a `context.Context` with a second local logger
 
-    logger := log.New()
+    logger := log.New("appName", "env", "level")
     logger.Add(log.KV{"key":"value"})
     ctx := logger.NewContext(context.Background())
 
-    logger2 := log.New()
+    logger2 := log.New("appName", "env", "level")
     logger2.Add(log.KV{"key2":"value2"})
     logger2.Ctx(ctx).Info("text")
 
