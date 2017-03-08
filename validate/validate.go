@@ -44,10 +44,15 @@ import (
 	"net/http"
 )
 
-type (
-	// IOError for when we fail to read the stream
-	IOError struct{ error }
-)
+// IOError for when we fail to read the stream
+type IOError struct {
+	Err error
+}
+
+// Error implements error interface
+func (e *IOError) Error() string {
+	return e.Err.Error()
+}
 
 // Validatable items can self validate
 type Validatable interface {

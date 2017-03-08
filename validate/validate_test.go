@@ -15,6 +15,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -179,4 +180,9 @@ func TestXmlRequest(t *testing.T) {
 			assert.Equal(t, tc.Expected, err.Error(), "test: %s", k)
 		}
 	}
+}
+
+func TestIOError(t *testing.T) {
+	err := IOError{fmt.Errorf("some error")}
+	assert.Equal(t, "some error", err.Error())
 }
