@@ -44,7 +44,7 @@ func (h logContextHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	h.handler.ServeHTTP(w, req.WithContext(ctx))
 }
 
-// LogContextHandler returns a handler that adds `http` and `transaction` items into a common logging context
+// LoggingContextHandler returns a handler that adds `http` and `transaction` items into the provided logging context
 //
 // It adds the following fields to the `LoggingResponseWriter` log context:
 //  http.method     - GET/POST/...
@@ -56,11 +56,6 @@ func (h logContextHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 //	http.ref		- http://google.com - referrer
 //	http.user-agent - The user agent of the user
 //  transaction     - unique uuid4 for this request
-func LogContextHandler(h http.Handler) http.Handler {
-	return logContextHandler{log.New(), h}
-}
-
-// LoggingContextHandler returns a handler that adds `http` and `transaction` items into the provided logging context
 func LoggingContextHandler(logger log.FieldLogger, h http.Handler) http.Handler {
 	return logContextHandler{logger.With(log.KV{}), h}
 }

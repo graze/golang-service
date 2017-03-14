@@ -12,7 +12,6 @@ package log
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/Sirupsen/logrus"
@@ -21,7 +20,7 @@ import (
 )
 
 func TestNewContext(t *testing.T) {
-	original := New()
+	original := New("", "", "")
 	logger := original.With(KV{"test": "test2"})
 	assert.NotEqual(t, original, logger)
 
@@ -46,9 +45,9 @@ func TestNewContext(t *testing.T) {
 }
 
 func TestMergeContext(t *testing.T) {
-	logger := New().With(KV{"test": 1})
+	logger := New("", "", "").With(KV{"test": 1})
 
-	logger2 := New().With(KV{"test2": 2})
+	logger2 := New("", "", "").With(KV{"test2": 2})
 
 	assert.Equal(t, KV{"test": 1}, logger.Fields())
 	assert.Equal(t, KV{"test2": 2}, logger2.Fields())
@@ -57,7 +56,7 @@ func TestMergeContext(t *testing.T) {
 }
 
 func testImplements(t *testing.T) {
-	logger := New()
+	logger := New("", "", "")
 	assert.Implements(t, (*Logger)(nil), logger)
 	assert.Implements(t, (*FieldLogger)(nil), logger)
 
@@ -86,11 +85,9 @@ func TestNewWithValidLogLevels(t *testing.T) {
 	}
 
 	for k, tc := range cases {
-		os.Setenv("LOG_LEVEL", tc.level)
-		logger := New()
+		logger := New("", "", tc.level)
 		assert.Equal(t, tc.expected, logger.Level(), "test: %s", k)
 	}
-	os.Setenv("LOG_LEVEL", "")
 }
 
 func TestNewWithInvalidLogLEvels(t *testing.T) {
@@ -103,11 +100,9 @@ func TestNewWithInvalidLogLEvels(t *testing.T) {
 	}
 
 	for k, tc := range cases {
-		os.Setenv("LOG_LEVEL", tc.level)
-		logger := New()
+		logger := New("", "", tc.level)
 		assert.Equal(t, tc.expected, logger.Level(), "test: %s", k)
 	}
-	os.Setenv("LOG_LEVEL", "")
 }
 
 func testAppendContext(t *testing.T) {
@@ -117,10 +112,10 @@ func testAppendContext(t *testing.T) {
 
 	assert.Equal(t, KV{"key": "value", "key2": "value2"}, Ctx(ctx).Fields())
 
-	logger := New().With(KV{"key": "value"})
+	logger := New("", "", "").With(KV{"key": "value"})
 	ctx = logger.NewContext(context.Background())
 
-	logger2 := New()
+	logger2 := New("", "", "")
 
 	ctx = logger2.AppendContext(ctx, KV{"key2": "value2"})
 
@@ -139,11 +134,11 @@ func TestNewContextKeepsOldContextValues(t *testing.T) {
 	ctx := context.WithValue(context.Background(), keyOne, "bar")
 	ctx = context.WithValue(ctx, keyTwo, "foo")
 
-	logger := New()
+	logger := New("", "", "")
 	ctx = logger.With(KV{"key": "value"}).NewContext(ctx)
 
 	assert.Equal(t, "bar", ctx.Value(keyOne))
 	assert.Equal(t, "foo", ctx.Value(keyTwo))
-	logger2 := New()
+	logger2 := New("", "", "")
 	assert.Equal(t, KV{"key": "value"}, logger2.Ctx(ctx).Fields())
 }

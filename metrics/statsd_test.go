@@ -50,10 +50,12 @@ func TestStatsdLogging(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	os.Setenv("STATSD_HOST", host)
-	os.Setenv("STATSD_PORT", port)
 
-	client, err := GetStatsdFromEnv()
+	c := StatsdClientConf{
+		Host: host,
+		Port: port,
+	}
+	client, err := GetStatsd(c)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,12 +97,14 @@ func TestStatsdLoggingWithNamespaceAndTags(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	os.Setenv("STATSD_HOST", host)
-	os.Setenv("STATSD_PORT", port)
-	os.Setenv("STATSD_NAMESPACE", "service.")
-	os.Setenv("STATSD_TAGS", "tag1:value,tag2")
 
-	client, err := GetStatsdFromEnv()
+	c := StatsdClientConf{
+		host,
+		port,
+		"service.",
+		[]string{"tag1:value", "tag2"},
+	}
+	client, err := GetStatsd(c)
 	if err != nil {
 		t.Fatal(err)
 	}

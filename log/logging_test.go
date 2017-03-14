@@ -21,7 +21,7 @@ import (
 )
 
 func TestLogging(t *testing.T) {
-	logger := New()
+	logger := New("", "", "")
 	hook := test.NewLocal(logger.Logger)
 
 	logger.Info("message")
@@ -39,10 +39,7 @@ func TestLogging(t *testing.T) {
 }
 
 func TestEnvironment(t *testing.T) {
-	os.Setenv("LOG_APPLICATION", "some_app")
-	os.Setenv("ENVIRONMENT", "test")
-
-	logger := New()
+	logger := New("some_app", "test", "")
 	hook := test.NewLocal(logger.Logger)
 
 	logger.Info("some text")
@@ -50,9 +47,6 @@ func TestEnvironment(t *testing.T) {
 	assert.Equal(t, "some text", hook.LastEntry().Message)
 	assert.Equal(t, "some_app", hook.LastEntry().Data["app"])
 	assert.Equal(t, "test", hook.LastEntry().Data["env"])
-
-	os.Setenv("LOG_APPLICATION", "")
-	os.Setenv("ENVIRONMENT", "")
 }
 
 func TestGlobalConfiguration(t *testing.T) {
@@ -60,7 +54,7 @@ func TestGlobalConfiguration(t *testing.T) {
 	SetLevel(DebugLevel)
 	SetFormatter(&logrus.JSONFormatter{})
 
-	logger := New()
+	logger := New("", "", "")
 
 	// New() uses the default settings
 	assert.Equal(t, os.Stderr, logger.Logger.Out)
@@ -78,7 +72,7 @@ func TestGlobalConfiguration(t *testing.T) {
 }
 
 func TestModificationOfContextLogger(t *testing.T) {
-	logger := New()
+	logger := New("", "", "")
 
 	// New() uses the default settings
 	assert.Equal(t, os.Stderr, logger.Logger.Out)
@@ -108,7 +102,7 @@ func TestPassingAroundContext(t *testing.T) {
 		"key2": "value2",
 	}, logger.Fields())
 
-	other := New().Ctx(ctx)
+	other := New("", "", "").Ctx(ctx)
 	assert.Equal(t, KV{"key": "value"}, other.Fields())
 }
 
@@ -138,7 +132,7 @@ func TestTheContextDoesNotContainAPointerToTheLogger(t *testing.T) {
 }
 
 func TestLevels(t *testing.T) {
-	logger := New()
+	logger := New("", "", "")
 	logger.SetLevel(logrus.DebugLevel)
 	hook := test.NewLocal(logger.Logger)
 

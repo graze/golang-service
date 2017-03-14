@@ -1,6 +1,8 @@
 # Golang Service Helpers
 
 [![Build Status](https://travis-ci.org/graze/golang-service.svg?branch=master)](https://travis-ci.org/graze/golang-service)
+[![Go Report Card](https://goreportcard.com/badge/github.com/graze/golang-service)](https://goreportcard.com/report/github.com/graze/golang-service)
+[![GoDoc](https://godoc.org/github.com/graze/golang-service?status.svg)](https://godoc.org/github.com/graze/golang-service)
 
 - [Log](log/README.md) Structured logging
 - [Handlers](handlers/README.md) http request middleware to add logging (auth, healthd, log context, statsd, structured logs)
