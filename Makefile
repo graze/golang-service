@@ -5,7 +5,7 @@
 
 DOCKER_CMD=docker-compose run --rm tools
 MOUNT=/go/src/github.com/graze/golang-service
-CODE=./handlers ./handlers/auth ./handlers/recovery ./log ./metrics ./nettest ./validate
+CODE=./handlers ./handlers/auth ./handlers/recovery ./log ./metrics ./nettest ./validate ./pagination
 
 install: ## Install the dependencies
 	rm -rf vendor
