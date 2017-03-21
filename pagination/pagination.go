@@ -14,23 +14,46 @@ const defaultItemsPerPage = 10
 
 // Pagination contains all of the JSON response fields as well as a url
 // that is later used in the json encoding to populate the hrefs dynamiclly
-// some strings are pointers so they can be a null JSON value if empty
+// some fields are pointers so they can be a null JSON value if empty
 type Pagination struct {
 	PageNumber        int     `json:"page_number"`
-	PagesTotal        int     `json:"pages_total"`
+	PagesTotal        *int    `json:"pages_total"`
 	ItemsPerPage      int     `json:"items_per_page"`
 	ItemsPerPageLimit int     `json:"items_per_page_limit"`
-	ItemsTotal        int     `json:"items_total"`
+	ItemsTotal        *int    `json:"items_total"`
 	FirstHref         string  `json:"first_href"`
-	LastHref          string  `json:"last_href"`
+	LastHref          *string `json:"last_href"`
 	NextHref          *string `json:"next_href"`
 	PrevHref          *string `json:"prev_href"`
 	request           *http.Request
 }
 
-// GetOffset returns the current offset (i.e. for database queries)
+// TooManyItemsPerPageError is the error generated when the requested items per page is greater than the max
+type TooManyItemsPerPageError struct {
+	PerPage, MaxPerPage int
+}
+
+func (e *TooManyItemsPerPageError) Error() string {
+	return fmt.Sprintf("The requested number of items per page (%d) is greater than the maximum allowed (%d)", e.PerPage, e.MaxPerPage)
+}
+
+// InvalidPageNumberError is the error generated when the requested page number is invalid
+type InvalidPageNumberError int
+
+func (e InvalidPageNumberError) Error() string {
+	return fmt.Sprintf("The requested page (%d) is less than 1", int(e))
+}
+
+// InvalidItemsPerPageError is the error generated when the requested items per page is invalid
+type InvalidItemsPerPageError int
+
+func (e InvalidItemsPerPageError) Error() string {
+	return fmt.Sprintf("The requested items per page (%d) is less than 1", int(e))
+}
+
+// Offset returns the current offset (i.e. for database queries)
 // based on the current page and number of itmes
-func (p *Pagination) GetOffset() int {
+func (p *Pagination) Offset() int {
 	if p.PageNumber == 1 {
 		return 0
 	}
@@ -39,13 +62,14 @@ func (p *Pagination) GetOffset() int {
 
 // SetItemsTotal will set the ItemsTotal value as well as the dynamic PagesTotal based on ItemsPerPage
 func (p *Pagination) SetItemsTotal(i int) {
-	p.ItemsTotal = i
-	p.PagesTotal = int(math.Ceil(float64(i) / float64(p.ItemsPerPage)))
+	p.ItemsTotal = &i
+	pt := int(math.Ceil(float64(i) / float64(p.ItemsPerPage)))
+	p.PagesTotal = &pt
 }
 
-// getURL is a helper used to build the HREFs based on the current URL
+// pageURL is a helper used to build the HREFs based on the current URL
 // it really just overrides the currently set page query string with the required value
-func (p *Pagination) getURL(page int) (u *url.URL) {
+func (p *Pagination) pageURL(page int) (u *url.URL) {
 	u = p.request.URL
 
 	q := u.Query()
@@ -71,15 +95,18 @@ func (p *Pagination) getURL(page int) (u *url.URL) {
 // New returns a configured Pagination struct that can be used
 func New(PageNumber int, ItemsPerPage int, ItemsPerPageLimit int, r *http.Request) (p Pagination, err error) {
 	if ItemsPerPage > ItemsPerPageLimit {
-		return p, fmt.Errorf("The requested number of items per page (%d) is greater than the maximum allowed (%d)", ItemsPerPage, ItemsPerPageLimit)
+		err = &TooManyItemsPerPageError{ItemsPerPage, ItemsPerPageLimit}
+		return
 	}
 
 	if PageNumber < 0 {
-		return p, fmt.Errorf("The requested page (%d) is less than 1", PageNumber)
+		err = InvalidPageNumberError(PageNumber)
+		return
 	}
 
 	if ItemsPerPage < 0 {
-		return p, fmt.Errorf("The requested items per page (%d) is less than 1", ItemsPerPage)
+		err = InvalidItemsPerPageError(ItemsPerPage)
+		return
 	}
 
 	// defaults
@@ -104,16 +131,20 @@ func New(PageNumber int, ItemsPerPage int, ItemsPerPageLimit int, r *http.Reques
 func (p Pagination) MarshalJSON() ([]byte, error) {
 
 	// Set our HREFs last minute
-	p.FirstHref = p.getURL(1).String()
-	p.LastHref = p.getURL(p.PagesTotal).String()
+	p.FirstHref = p.pageURL(1).String()
 
-	if p.PageNumber < p.PagesTotal {
-		next := p.getURL(p.PageNumber + 1).String()
+	if p.PagesTotal != nil {
+		last := p.pageURL(*p.PagesTotal).String()
+		p.LastHref = &last
+	}
+
+	if p.PagesTotal == nil || p.PageNumber < *p.PagesTotal {
+		next := p.pageURL(p.PageNumber + 1).String()
 		p.NextHref = &next
 	}
 
 	if p.PageNumber > 1 {
-		prev := p.getURL(p.PageNumber - 1).String()
+		prev := p.pageURL(p.PageNumber - 1).String()
 		p.PrevHref = &prev
 	}
 
