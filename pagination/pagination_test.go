@@ -134,3 +134,20 @@ func TestToJsonNoTotal(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, `{"page_number":10,"pages_total":null,"items_per_page":10,"items_per_page_limit":10,"items_total":null,"first_href":"http://example.com:80/path/to/data/?foo=bar\u0026limit=10\u0026page=1\u0026test=test","last_href":null,"next_href":"http://example.com:80/path/to/data/?foo=bar\u0026limit=10\u0026page=11\u0026test=test","prev_href":"http://example.com:80/path/to/data/?foo=bar\u0026limit=10\u0026page=9\u0026test=test"}`, string(json))
 }
+
+// With SetItemsTotal()
+func TestPageToHighWithCount(t *testing.T) {
+	p, _ := New(1000, 10, 10, &http.Request{})
+	p.SetItemsTotal(10)
+	err := p.Validate()
+
+	assert.NotNil(t, err)
+}
+
+// Without SetItemsTotal() we cannot know
+func TestPageToHighWithoutCount(t *testing.T) {
+	p, _ := New(1000, 10, 10, &http.Request{})
+	err := p.Validate()
+
+	assert.Nil(t, err)
+}

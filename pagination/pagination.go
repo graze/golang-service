@@ -41,7 +41,7 @@ func (e *TooManyItemsPerPageError) Error() string {
 type InvalidPageNumberError int
 
 func (e InvalidPageNumberError) Error() string {
-	return fmt.Sprintf("The requested page (%d) is less than 1", int(e))
+	return fmt.Sprintf("The requested page (%d) is not available", int(e))
 }
 
 // InvalidItemsPerPageError is the error generated when the requested items per page is invalid
@@ -62,9 +62,9 @@ func (p *Pagination) Offset() int {
 
 // SetItemsTotal will set the ItemsTotal value as well as the dynamic PagesTotal based on ItemsPerPage
 func (p *Pagination) SetItemsTotal(i int) {
-	p.ItemsTotal = &i
 	pt := int(math.Ceil(float64(i) / float64(p.ItemsPerPage)))
 	p.PagesTotal = &pt
+	p.ItemsTotal = &i
 }
 
 // pageURL is a helper used to build the HREFs based on the current URL
@@ -124,6 +124,18 @@ func New(PageNumber int, ItemsPerPage int, ItemsPerPageLimit int, r *http.Reques
 		ItemsPerPageLimit: ItemsPerPageLimit,
 		request:           r,
 	}, err
+}
+
+// Validate provides validation to make sure that given its current state, everything is ok
+func (p Pagination) Validate() (err error) {
+	// Total pages is optional, but if its set and the current page
+	// is greater than available, fail validation
+	if nil != p.PagesTotal && p.PageNumber > *p.PagesTotal {
+		err = InvalidPageNumberError(p.PageNumber)
+		return
+	}
+
+	return
 }
 
 // MarshalJSON is called when ever the Pagination object is json encoded, we
