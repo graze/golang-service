@@ -25,13 +25,27 @@ consider the following:
     - e.g. does the client really want/need X records upfront when it is only capable of displaying X/10?
     - e.g. limited or unreliable connectivity (i.e. mobile) - what volume of data can the client handle?
 
+A base Pagination struct is supplied along with a JSON implimentation, examples of both below.
+
 Usage:
+	currentPage := 10 // from user input
+	userLimit := 100 // from user input
+	maxLimit := 250
+
+	pag, err := pagination.New(currentPage, userLimit, maxLimit)
+	if err != nil {
+		panic(err)
+	}
+	count := getSomeData()
+	pag.SetItemsTotal(count)
+
+Alt Usage:
 	r := &http.Request{} // replace with your request object
 	currentPage := 10 // from user input
 	userLimit := 100 // from user input
 	maxLimit := 250
 
-	pag, err := pagination.New(currentPage, userLimit, maxLimit, r)
+	pag, err := pagination.NewJSON(currentPage, userLimit, maxLimit, r)
 	if err != nil {
 		panic(err)
 	}
