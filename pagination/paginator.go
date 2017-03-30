@@ -8,14 +8,6 @@ import (
 const defaultPageNumber = 1
 const defaultItemsPerPage = 10
 
-// PaginatorInterface defines what makes a paginator
-type PaginatorInterface interface {
-	Init(PageNumber int, ItemsPerPage int, ItemsPerPageLimit int) (err error)
-	Offset() int
-	SetItemsTotal(i int)
-	Validate() (err error)
-}
-
 // Paginator contains all of the basic pagination fields
 type Paginator struct {
 	PageNumber        int
@@ -49,42 +41,42 @@ func (e InvalidItemsPerPageError) Error() string {
 }
 
 // New returns a new Paginator whilst calling init
-func New(PageNumber int, ItemsPerPage int, ItemsPerPageLimit int) (p *Paginator, err error) {
+func New(pageNumber int, itemsPerPage int, itemsPerPageLimit int) (p *Paginator, err error) {
 	p = &Paginator{}
-	err = p.Init(PageNumber, ItemsPerPage, ItemsPerPageLimit)
+	err = p.Init(pageNumber, itemsPerPage, itemsPerPageLimit)
 	return
 }
 
 // Init configs the Paginator struct, it is used so that we can have child structs
 // inherit Pagination - see JSON for an example
-func (p *Paginator) Init(PageNumber int, ItemsPerPage int, ItemsPerPageLimit int) (err error) {
-	if ItemsPerPage > ItemsPerPageLimit {
-		err = &TooManyItemsPerPageError{ItemsPerPage, ItemsPerPageLimit}
+func (p *Paginator) Init(pageNumber int, itemsPerPage int, itemsPerPageLimit int) (err error) {
+	if itemsPerPage > itemsPerPageLimit {
+		err = &TooManyItemsPerPageError{itemsPerPage, itemsPerPageLimit}
 		return
 	}
 
-	if PageNumber < 0 {
-		err = InvalidPageNumberError(PageNumber)
+	if pageNumber < 0 {
+		err = InvalidPageNumberError(pageNumber)
 		return
 	}
 
-	if ItemsPerPage < 0 {
-		err = InvalidItemsPerPageError(ItemsPerPage)
+	if itemsPerPage < 0 {
+		err = InvalidItemsPerPageError(itemsPerPage)
 		return
 	}
 
 	// defaults
-	if 0 == PageNumber {
-		PageNumber = defaultPageNumber
+	if 0 == pageNumber {
+		pageNumber = defaultPageNumber
 	}
 
-	if 0 == ItemsPerPage {
-		ItemsPerPage = defaultItemsPerPage
+	if 0 == itemsPerPage {
+		itemsPerPage = defaultItemsPerPage
 	}
 
-	p.PageNumber = PageNumber
-	p.ItemsPerPage = ItemsPerPage
-	p.ItemsPerPageLimit = ItemsPerPageLimit
+	p.PageNumber = pageNumber
+	p.ItemsPerPage = itemsPerPage
+	p.ItemsPerPageLimit = itemsPerPageLimit
 
 	return
 }
@@ -99,20 +91,15 @@ func (p *Paginator) Offset() int {
 }
 
 // SetItemsTotal will set the ItemsTotal value as well as the dynamic PagesTotal based on ItemsPerPage
-func (p *Paginator) SetItemsTotal(i int) {
+func (p *Paginator) SetItemsTotal(i int) (err error) {
 	pt := int(math.Ceil(float64(i) / float64(p.ItemsPerPage)))
-	p.PagesTotal = &pt
-	p.ItemsTotal = &i
-}
 
-// Validate provides validation to make sure that given its current state, everything is ok
-func (p *Paginator) Validate() (err error) {
-	// Total pages is optional, but if its set and the current page
-	// is greater than available, fail validation
-	if nil != p.PagesTotal && p.PageNumber > *p.PagesTotal {
+	if p.PageNumber > 1 && p.PageNumber > pt {
 		err = InvalidPageNumberError(p.PageNumber)
 		return
 	}
 
+	p.PagesTotal = &pt
+	p.ItemsTotal = &i
 	return
 }

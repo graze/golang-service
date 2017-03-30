@@ -14,9 +14,9 @@ type JSON struct {
 }
 
 // NewJSON creates a new JSON paginator, which extends a basic Paginator but adds the request object
-func NewJSON(PageNumber int, ItemsPerPage int, ItemsPerPageLimit int, r *http.Request) (j *JSON, err error) {
+func NewJSON(pageNumber int, itemsPerPage int, itemsPerPageLimit int, r *http.Request) (j *JSON, err error) {
 	j = new(JSON)
-	err = j.Init(PageNumber, ItemsPerPage, ItemsPerPageLimit)
+	err = j.Init(pageNumber, itemsPerPage, itemsPerPageLimit)
 	j.r = r
 	return
 }
@@ -80,11 +80,11 @@ func (j *JSON) pageURL(page int) (u *url.URL) {
 	if "" == u.Host {
 		u.Host = j.r.Host
 	}
+
+	// use a secure default, this can be set in the URL directly
+	// or by the X-Forwarded-Proto and RFC7239 headers
 	if "" == u.Scheme {
-		u.Scheme = "http"
-		if nil != j.r.TLS {
-			u.Scheme = "https"
-		}
+		u.Scheme = "https"
 	}
 
 	return

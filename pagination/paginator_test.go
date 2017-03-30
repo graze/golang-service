@@ -88,16 +88,7 @@ func TestUnknownTotal(t *testing.T) {
 // With SetItemsTotal()
 func TestPageToHighWithCount(t *testing.T) {
 	p, _ := New(1000, 10, 10)
-	p.SetItemsTotal(10)
-	err := p.Validate()
+	err := p.SetItemsTotal(10)
 
 	assert.NotNil(t, err)
-}
-
-// Without SetItemsTotal() we cannot know
-func TestPageToHighWithoutCount(t *testing.T) {
-	p, _ := New(1000, 10, 10)
-	err := p.Validate()
-
-	assert.Nil(t, err)
 }

@@ -44,6 +44,18 @@ func TestPageUrl(t *testing.T) {
 	assert.Equal(t, "http://example.com:80/path/to/data/?foo=bar&limit=10&page=1&test=test", p.pageURL(1).String())
 }
 
+func TestPageUrlDefaults(t *testing.T) {
+	p, _ := NewJSON(1, 10, 10, &http.Request{
+		Host: "example.com:80", // host or host:port
+		URL: &url.URL{
+			Path:     "path/to/data/",
+			RawQuery: "test=test&foo=bar", // encoded query values, without '?'
+		},
+	})
+
+	assert.Equal(t, "https://example.com:80/path/to/data/?foo=bar&limit=10&page=1&test=test", p.pageURL(1).String())
+}
+
 func TestToJsonFirstPage(t *testing.T) {
 	p, _ := NewJSON(1, 10, 10, &http.Request{
 		URL: &url.URL{
