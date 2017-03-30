@@ -21,6 +21,8 @@ The handlers package provides a set of handlers that handle http.Request log the
 
 The nettest package provides a set of helpers for use when testing networks
 
-The validate package provides input validate for user requests
+The validate package provides input validation for user requests
+
+The pagination package provides a helper for managing paginated resources
 */
 package golangservice
